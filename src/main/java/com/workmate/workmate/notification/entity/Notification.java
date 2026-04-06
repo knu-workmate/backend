@@ -3,11 +3,13 @@ package com.workmate.workmate.notification.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDateTime;
 import com.workmate.workmate.user.entity.User;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "notification")
 public class Notification {
