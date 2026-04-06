@@ -9,7 +9,7 @@ global
 ├── security
 │    - JWT 관련 처리
 │    - 예: JwtProvider.java, JwtFilter.java
-│    - 토큰 생성/검증/재발급
+│    - 토큰 생성/검증/재발급/파싱
 │
 ├── exception
 │    - 공통 예외 처리
