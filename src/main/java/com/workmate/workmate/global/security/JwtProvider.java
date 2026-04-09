@@ -15,7 +15,7 @@ import java.util.Date;
 @Component
 public class JwtProvider {
     private final String secret = "thisisaverysecuresecretkey123456"; // 최소 256비트 이상 길이 필요, 추후 환경변수로 관리
-    private final long accessTokenValidTime = 1000 * 60 * 60; // 1시간
+    private final long accessTokenValidTime = 1000 * 60 * 60 * 24; // 24시간
 
     private final Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
