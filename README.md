@@ -14,6 +14,7 @@
 ## 👤 사용자 정보 사용
 
 `CurrentUser`를 주입받아 필요한 정보만 꺼내서 사용합니다.
+(com.workmate.workmate.global.security.CurrnetUser)
 
 ### 제공 메서드
 
