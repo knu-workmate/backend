@@ -30,6 +30,9 @@ public class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        // 기존 데이터 삭제
+        userRepository.deleteAll();
+
         // 테스트 데이터 초기화
         testUser = new User();
         testUser.setName("테스트 사용자");
