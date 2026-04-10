@@ -2,7 +2,6 @@ package com.workmate.workmate.auth.service;
 
 import org.springframework.stereotype.Service;
 import com.workmate.workmate.auth.dto.LoginRequest;
-import com.workmate.workmate.global.security.CurrentUser;
 import com.workmate.workmate.global.security.JwtProvider;
 import com.workmate.workmate.user.repository.UserRepository;
 import com.workmate.workmate.user.entity.User;
