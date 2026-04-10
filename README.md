@@ -42,13 +42,6 @@ public class SomeService {
 }
 ```
 
-```
-}
-```
-
-}
-
-```
 
 ---
 
