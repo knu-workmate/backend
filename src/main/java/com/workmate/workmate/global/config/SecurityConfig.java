@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // 로그인과 Swagger UI 허용
+                        .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/hello").permitAll() // 로그인과 Swagger UI 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 );
 
