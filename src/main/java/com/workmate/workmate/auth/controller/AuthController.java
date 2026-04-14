@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.*;
 import com.workmate.workmate.auth.dto.LoginRequest;
 import com.workmate.workmate.auth.dto.TokenResponse;
 import com.workmate.workmate.auth.service.AuthService;
+import com.workmate.workmate.auth.dto.SignupResponse;
+import com.workmate.workmate.auth.dto.SignupRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,5 +36,14 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest req) {
         String token = auth.login(req);
         return ResponseEntity.ok(new TokenResponse(token));
+    }
+
+    @Operation(summary = "사용자 회원가입", description = "새로운 사용자 등록, role은 0(WORKER) 또는 1(ADMIN)로 입력")
+    @ApiResponse(responseCode = "201", description = "회원가입 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SignupResponse.class)))
+    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = com.workmate.workmate.global.exception.ErrorResponse.class)))
+    @PostMapping("/signup")
+    public ResponseEntity<SignupResponse> signup(@RequestBody SignupRequest req) {
+        SignupResponse response = auth.signup(req);
+        return ResponseEntity.status(201).body(response);
     }
 }
