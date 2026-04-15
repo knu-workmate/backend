@@ -20,8 +20,6 @@ public class BoardDto {
         @Schema(description = "게시판 타입", example = "NORMAL or NOTICE")
         private BoardType type;
 
-        @Schema(description = "사업장 고유 ID", example = "1")
-        private Long workplaceId;
     }
 
     @Schema(description = "게시판 조회 관련 객체")

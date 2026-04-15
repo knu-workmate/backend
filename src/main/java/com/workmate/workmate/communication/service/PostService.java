@@ -63,6 +63,7 @@ public class PostService {
                         post.getTitle(),
                         post.getUser().getName(),
                         post.getBoard().getId(),
+                        post.getUser().getId(),
                         post.getCreatedAt()
                 )).collect(Collectors.toList());
     }

@@ -19,26 +19,17 @@ public class BoardController {
         this.boardService = boardService;
     }
 
-    /* 게시판 생성 */
-    @Operation(summary = "게시판 생성", description = "새로운 게시판을 생성함")
+    @Operation(summary = "게시판 생성", description = "토큰의 유저 정보를 바탕으로 소속 사업장에 게시판을 생성함")
     @PostMapping
     public ResponseEntity<Long> createBoard(@RequestBody BoardDto.Request req) {
-        Long boardId = boardService.createBoard(req);
-        return ResponseEntity.ok(boardId);
+        return ResponseEntity.ok(boardService.createBoard(req));
     }
 
-    /*사업장 게시판 전체 조회*/
-    @Operation(summary = "사업장 게시판 조회", description = "사업장 번호로 게시판을 전부 조회합니다.")
-    @GetMapping("/workplace/{workplaceId}")
-    public ResponseEntity<List<BoardDto.LookUp>> getWorkplaceBoards(@PathVariable Long workplaceId) {
-        List<BoardDto.LookUp> boards = boardService.getAllBoards(workplaceId);
-        return ResponseEntity.ok(boards);
+    @Operation(summary = "내 사업장 게시판 전체 조회", description = "로그인한 유저가 속한 사업장의 모든 게시판을 조회합니다.")
+    @GetMapping("/my") // 경로에서 ID 제거하고 /my 등으로 변경
+    public ResponseEntity<List<BoardDto.LookUp>> getMyWorkplaceBoards() {
+        return ResponseEntity.ok(boardService.getAllBoards());
     }
-
-    /*특정 게시판 조회
-    @GetMapping("/{boardId}")
-    public ResponseEntity<BoardDto.LookUp> getBoard(@PathVariable Long boardId) {
-        BoardDto.LookUp board = boardService.getBoard(boardId);
-        return ResponseEntity.ok(board);
-    }*/
 }
+
+

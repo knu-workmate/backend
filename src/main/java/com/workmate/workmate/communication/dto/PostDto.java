@@ -30,6 +30,7 @@ public class PostDto {
         private Long postId;
         private String title;
         private String authorName; // User 테이블 에서 가져옴
+        private Long authorId; //추가했습니다
         private Long boardId;      // Board 테이블 에서 가져옴
         private LocalDateTime createdAt;
     }
