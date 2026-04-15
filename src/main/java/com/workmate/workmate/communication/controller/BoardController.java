@@ -35,10 +35,10 @@ public class BoardController {
         return ResponseEntity.ok(boards);
     }
 
-    /*특정 게시판 조회*/
+    /*특정 게시판 조회
     @GetMapping("/{boardId}")
     public ResponseEntity<BoardDto.LookUp> getBoard(@PathVariable Long boardId) {
         BoardDto.LookUp board = boardService.getBoard(boardId);
         return ResponseEntity.ok(board);
-    }
+    }*/
 }

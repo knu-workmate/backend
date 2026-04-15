@@ -2,6 +2,12 @@
 
 * Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
+<!-- JWT 관련 api 시작-->
+
+
+<details>
+<summary> <h2>JWT</h2> </summary>
+
 ---
 
 ## 🔐 인증 처리 방식
@@ -51,4 +57,107 @@ public class SomeService {
 - 인증은 필터에서 자동 처리
 - 사용자 정보는 `CurrentUser`에서 필요한 값만 꺼내서 사용
 
+</details>
+
+
+
+
+<details>
+
+<!-- 게시판 api 시작-->
+
+<summary><h2> 게시판 </h2></summary>
+
+<br>
+
+### POST: 게시판 생성
+
+Endpoint: `/boards`
+
+새로운 게시판을 생성합니다. 
+
+-  Request Body 
+
+| params        | 타입                      |  설명   |
+|---------------|-------------------------|-------|
+| 'boardName'   | varchar                 | 유저 아이디 |
+| 'type'        | enum('NORMAL, 'NOTICE') | 비밀번호  |
+| 'workPlaceId' | bigint                  | 이름    |
+
+- Response Body
+```json
+
+{
+  "boardId": 1,
+  "boardName": "자유게시판",
+  "type": "NORMAL"
+}
+
 ```
+---
+
+
+### GET: 사업장 게시판 조회
+
+Endpoint: `/boards/workplace/{workplaceId}`
+
+특정 사업장에 생성된 모든 게시판 목록을 리스트로 반환합니다.
+
+-  Path Variable:
+  ``` workplaceId: 조회할 사업장의 고유 ID```
+
+
+- Response Body
+```json
+
+[
+  {
+    "boardId": 1,
+    "boardName": "공지사항",
+    "type": "NOTICE"
+  },
+  {
+    "boardId": 2,
+    "boardName": "자유게시판",
+    "type": "NORMAL"
+  }
+]
+
+```
+
+---
+
+
+## GET: 게시판 상세 조회
+
+Endpoint: `/boards/{boardId}}`
+
+특정 게시판 1개의 상세 정보를 조회합니다.
+
+-  Path Variable :
+```boardId: 조회할 사업장의 고유 ID```
+
+
+- Response Body
+```json
+
+[
+  {
+    "boardId": 1,
+    "boardName": "공지사항",
+    "type": "NOTICE"
+  },
+  
+  {
+    "boardId": 2,
+    "boardName": "자유게시판",
+    "type": "NORMAL"
+  }
+]
+
+```
+
+
+
+</details>
+

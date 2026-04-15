@@ -73,12 +73,14 @@ public class BoardService {
     /**
      * 게시판 단건 상세 조회
      */
+
+   /*
     @Transactional(readOnly = true)
     public BoardDto.LookUp getBoard(Long boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
 
         return new BoardDto.LookUp(board.getId(), board.getType(), board.getName());
-    }
+    }*/
 
 }
