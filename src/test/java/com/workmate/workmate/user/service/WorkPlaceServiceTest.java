@@ -4,7 +4,12 @@ import com.workmate.workmate.global.exception.UnauthorizedException;
 import com.workmate.workmate.global.security.CurrentUser;
 import com.workmate.workmate.user.dto.SearchResponse;
 import com.workmate.workmate.user.dto.WorkPlaceRequest;
+import com.workmate.workmate.user.dto.WorkPlaceEdit;
+import com.workmate.workmate.user.dto.UserInfo;
+import com.workmate.workmate.user.dto.WorkPlaceInfo;
 import com.workmate.workmate.user.entity.Workplace;
+import com.workmate.workmate.user.entity.User;
+import com.workmate.workmate.user.entity.Role;
 import com.workmate.workmate.user.repository.WorkplaceRepository;
 import com.workmate.workmate.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -14,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -168,5 +174,332 @@ class WorkPlaceServiceTest {
 
         // Then
         assertEquals(workplaceName, result.getName());
+    }
+
+    // ============ 새로운 기능 테스트 코드 ============
+
+    @Test
+    @DisplayName("사업장 정보 수정 성공 - ADMIN 권한")
+    void updateWorkplace_withAdminRole_success() {
+        // Given
+        Long userId = 1L;
+        WorkPlaceEdit request = new WorkPlaceEdit();
+        request.setName("수정된 회사명");
+        
+        User adminUser = new User();
+        adminUser.setId(userId);
+        adminUser.setRole(Role.ADMIN);
+        
+        Workplace workplace = new Workplace();
+        workplace.setId(1L);
+        workplace.setName("원래 회사명");
+        adminUser.setWorkplace(workplace);
+        
+        given(currentUser.getUserRole()).willReturn("ADMIN");
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(adminUser));
+        given(workplaceRepository.save(any(Workplace.class))).willReturn(workplace);
+        
+        // When
+        Workplace result = workPlaceService.updateWorkplace(request);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals("수정된 회사명", workplace.getName());
+    }
+
+    @Test
+    @DisplayName("사업장 정보 수정 실패 - WORKER 권한")
+    void updateWorkplace_withWorkerRole_throwsException() {
+        // Given
+        WorkPlaceEdit request = new WorkPlaceEdit();
+        request.setName("수정된 회사명");
+        given(currentUser.getUserRole()).willReturn("WORKER");
+        
+        // When & Then
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class,
+                () -> workPlaceService.updateWorkplace(request));
+        
+        assertEquals("관리자 권한이 필요합니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 부여 성공")
+    void assignAdmin_success() {
+        // Given
+        Long currentUserId = 1L;
+        Long newAdminId = 2L;
+        
+        User currentAdmin = new User();
+        currentAdmin.setId(currentUserId);
+        currentAdmin.setRole(Role.ADMIN);
+        currentAdmin.setName("관리자1");
+        
+        User newAdmin = new User();
+        newAdmin.setId(newAdminId);
+        newAdmin.setRole(Role.WORKER);
+        newAdmin.setName("관리자2");
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentAdmin));
+        given(userRepository.findById(newAdminId)).willReturn(Optional.of(newAdmin));
+        given(userRepository.save(any(User.class))).willReturn(newAdmin);
+        
+        // When
+        UserInfo result = workPlaceService.assignAdmin(currentUserId, newAdminId);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(newAdminId, result.getId());
+        assertEquals(Role.ADMIN, newAdmin.getRole());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 부여 실패 - 현재 사용자가 관리자가 아님")
+    void assignAdmin_withoutAdminRole_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long newAdminId = 2L;
+        
+        User currentUser = new User();
+        currentUser.setId(currentUserId);
+        currentUser.setRole(Role.WORKER);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentUser));
+        
+        // When & Then
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class,
+                () -> workPlaceService.assignAdmin(currentUserId, newAdminId));
+        
+        assertEquals("관리자 권한이 필요합니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 제거 성공")
+    void removeAdmin_success() {
+        // Given
+        Long currentUserId = 1L;
+        Long adminId = 2L;
+        
+        User currentAdmin = new User();
+        currentAdmin.setId(currentUserId);
+        currentAdmin.setRole(Role.ADMIN);
+        currentAdmin.setName("관리자1");
+        
+        User adminToRemove = new User();
+        adminToRemove.setId(adminId);
+        adminToRemove.setRole(Role.ADMIN);
+        adminToRemove.setName("관리자2");
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentAdmin));
+        given(userRepository.findById(adminId)).willReturn(Optional.of(adminToRemove));
+        given(userRepository.save(any(User.class))).willReturn(adminToRemove);
+        
+        // When
+        UserInfo result = workPlaceService.removeAdmin(currentUserId, adminId);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(adminId, result.getId());
+        assertEquals(Role.WORKER, adminToRemove.getRole());
+    }
+
+    @Test
+    @DisplayName("사업장 탈퇴 성공")
+    void leaveWorkplace_success() {
+        // Given
+        Long userId = 1L;
+        
+        User worker = new User();
+        worker.setId(userId);
+        worker.setRole(Role.WORKER);
+        worker.setName("근무자1");
+        
+        Workplace workplace = new Workplace();
+        workplace.setId(1L);
+        workplace.setName("회사");
+        worker.setWorkplace(workplace);
+        
+        given(userRepository.findById(userId)).willReturn(Optional.of(worker));
+        given(userRepository.save(any(User.class))).willReturn(worker);
+        
+        // When
+        UserInfo result = workPlaceService.leaveWorkplace(userId);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(userId, result.getId());
+    }
+
+    @Test
+    @DisplayName("사업장 탈퇴 실패 - 관리자는 탈퇴 불가")
+    void leaveWorkplace_adminCannotLeave_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User admin = new User();
+        admin.setId(userId);
+        admin.setRole(Role.ADMIN);
+        admin.setName("관리자1");
+        
+        given(userRepository.findById(userId)).willReturn(Optional.of(admin));
+        
+        // When & Then
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class,
+                () -> workPlaceService.leaveWorkplace(userId));
+        
+        assertEquals("관리자는 사업장을 탈퇴할 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("근무자 강제 퇴장 성공")
+    void removeWorker_success() {
+        // Given
+        Long currentUserId = 1L;
+        Long workerId = 2L;
+        
+        User admin = new User();
+        admin.setId(currentUserId);
+        admin.setRole(Role.ADMIN);
+        
+        User worker = new User();
+        worker.setId(workerId);
+        worker.setRole(Role.WORKER);
+        worker.setName("근무자1");
+        
+        Workplace workplace = new Workplace();
+        workplace.setId(1L);
+        worker.setWorkplace(workplace);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(admin));
+        given(userRepository.findById(workerId)).willReturn(Optional.of(worker));
+        given(userRepository.save(any(User.class))).willReturn(worker);
+        
+        // When
+        UserInfo result = workPlaceService.removeWorker(currentUserId, workerId);
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(workerId, result.getId());
+    }
+
+    @Test
+    @DisplayName("근무자 강제 퇴장 실패 - 관리자가 아님")
+    void removeWorker_withoutAdminRole_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long workerId = 2L;
+        
+        User worker = new User();
+        worker.setId(currentUserId);
+        worker.setRole(Role.WORKER);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(worker));
+        
+        // When & Then
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class,
+                () -> workPlaceService.removeWorker(currentUserId, workerId));
+        
+        assertEquals("관리자 권한이 필요합니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 삭제 성공")
+    void deleteWorkplace_success() {
+        // Given
+        Long userId = 1L;
+        
+        User admin = new User();
+        admin.setId(userId);
+        admin.setRole(Role.ADMIN);
+        
+        Workplace workplace = new Workplace();
+        workplace.setId(1L);
+        workplace.setName("삭제할 회사");
+        workplace.setInviteCode("CODE123");
+        workplace.setCreatedAt(LocalDateTime.now());
+        admin.setWorkplace(workplace);
+        
+        User worker = new User();
+        worker.setId(2L);
+        worker.setRole(Role.WORKER);
+        worker.setWorkplace(workplace);
+        
+        List<User> workplaceUsers = Arrays.asList(admin, worker);
+        
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(admin));
+        given(userRepository.findByWorkplace(workplace)).willReturn(workplaceUsers);
+        given(userRepository.save(any(User.class))).willReturn(new User());
+        
+        // When
+        WorkPlaceInfo result = workPlaceService.deleteWorkplace();
+        
+        // Then
+        assertNotNull(result);
+        assertEquals("삭제할 회사", result.getName());
+    }
+
+    @Test
+    @DisplayName("사업장 삭제 실패 - 관리자가 아님")
+    void deleteWorkplace_withoutAdminRole_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User worker = new User();
+        worker.setId(userId);
+        worker.setRole(Role.WORKER);
+        
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(worker));
+        
+        // When & Then
+        UnauthorizedException exception = assertThrows(UnauthorizedException.class,
+                () -> workPlaceService.deleteWorkplace());
+        
+        assertEquals("관리자 권한이 필요합니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 정보 조회 성공")
+    void getWorkplaceInfo_success() {
+        // Given
+        Long userId = 1L;
+        
+        User user = new User();
+        user.setId(userId);
+        user.setRole(Role.ADMIN);
+        user.setName("관리자");
+        
+        Workplace workplace = new Workplace();
+        workplace.setId(1L);
+        workplace.setName("회사");
+        workplace.setInviteCode("CODE123");
+        workplace.setCreatedAt(LocalDateTime.now());
+        user.setWorkplace(workplace);
+        
+        User admin = new User();
+        admin.setId(userId);
+        admin.setRole(Role.ADMIN);
+        admin.setName("관리자");
+        
+        User worker = new User();
+        worker.setId(2L);
+        worker.setRole(Role.WORKER);
+        worker.setName("근무자");
+        
+        List<User> workplaceUsers = Arrays.asList(admin, worker);
+        
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.findByWorkplace(workplace)).willReturn(workplaceUsers);
+        
+        // When
+        WorkPlaceInfo result = workPlaceService.getWorkplaceInfo();
+        
+        // Then
+        assertNotNull(result);
+        assertEquals("회사", result.getName());
+        assertEquals(1, result.getAdmins().size());
+        assertEquals(1, result.getUsers().size());
     }
 }
