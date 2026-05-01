@@ -78,7 +78,6 @@ public class BoardService {
         // 2. 게시판 조회
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
-
         // 자기 게시판인지 확인
         if (!board.getWorkplace().getId().equals(user.getWorkplace().getId())) {
             throw new RuntimeException("해당 게시판을 수정할 권한이 없습니다.");

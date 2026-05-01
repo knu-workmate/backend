@@ -44,8 +44,6 @@ public class BoardDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BoardUpdate{
-        @Schema(description = "게시판 ID" ,example = "1")
-        private Long boardId;
 
         @Schema(description = "게시판 타입", example = "NORMAL or NOTICE")
         private BoardType type;
