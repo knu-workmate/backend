@@ -6,7 +6,6 @@ import com.workmate.workmate.communication.repository.BoardRepository;
 import com.workmate.workmate.user.entity.User;
 import com.workmate.workmate.user.entity.Workplace;
 import com.workmate.workmate.user.repository.UserRepository;
-import com.workmate.workmate.user.repository.WorkplaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final WorkplaceRepository workplaceRepository;
     private final CurrentUser currentUser;
     private final UserRepository userRepository;
 
