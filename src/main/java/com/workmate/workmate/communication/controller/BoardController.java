@@ -30,6 +30,24 @@ public class BoardController {
     public ResponseEntity<List<BoardDto.LookUp>> getMyWorkplaceBoards() {
         return ResponseEntity.ok(boardService.getAllBoards());
     }
+
+    @Operation(summary = "게시판 수정", description = "게시판의 이름이나 타입을 수정합니다. (내 사업장 게시판만 가능)")
+    @PatchMapping("/{boardId}")
+    public ResponseEntity<Void> updateBoard(
+            @PathVariable Long boardId,
+            @RequestBody BoardDto.BoardUpdate req) {
+        boardService.updateBoard(boardId, req);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "게시판 삭제", description = "게시판을 삭제합니다. (내 사업장 게시판만 가능)")
+    @DeleteMapping("/{boardId}")
+    public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId) {
+        boardService.deleteBoard(boardId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }
 
 
