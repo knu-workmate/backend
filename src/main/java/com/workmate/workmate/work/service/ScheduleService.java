@@ -13,15 +13,21 @@ import com.workmate.workmate.work.dto.ScheduleGetResponse;
 import com.workmate.workmate.work.dto.ScheduleDate;
 import com.workmate.workmate.user.entity.User;
 import org.springframework.stereotype.Service;
+import com.workmate.workmate.work.repository.SubstituteRepository;
+import com.workmate.workmate.work.entity.Substitute;
+import java.util.Optional;
+import com.workmate.workmate.work.entity.SubstituteStatus;
 
 @Service
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final SubstituteRepository substituteRepository;
 
-    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository) {
+    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository, SubstituteRepository substituteRepository) {
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
+        this.substituteRepository = substituteRepository;
     }
 
     public List<ScheduleResponse> saveSchedule(List<ScheduleRequest> scheduleRequest, Long userId) {
@@ -112,8 +118,16 @@ public class ScheduleService {
         response.setWorkplaceName(firstSchedule.getUser().getWorkplace().getName());
 
         List<ScheduleDate> scheduleDates = new ArrayList<>();
+        // 내가 원래 근무하는 스케줄
         for (Schedule schedule : schedules) {
             if (schedule.getWorkDate().toString().compareTo(startDate) >= 0 && schedule.getWorkDate().toString().compareTo(endDate) <= 0) {
+                // 만약 현재 스케줄이 대타로 인해 변경된 일정이라면(내가 근무하지 않게된 일정)
+                Optional<Substitute> substituteOpt = substituteRepository.findBySchedule_IdAndStatus(schedule.getId(), SubstituteStatus.APPROVED);
+                if (substituteOpt.isPresent()) {
+                    // 대타로 인해 변경된 일정이므로 해당 일정은 건너뛰고 다음 스케줄로 넘어감
+                    continue;
+                }
+
                 ScheduleDate scheduleDate = new ScheduleDate();
                 scheduleDate.setWorkDate(schedule.getWorkDate());
                 scheduleDate.setStartTime(schedule.getStartTime());
@@ -122,6 +136,31 @@ public class ScheduleService {
                 scheduleDates.add(scheduleDate);
             }
         }
+
+        // 내가 대타로 근무하게된 스케줄
+        List<Substitute> substituteSchedules = substituteRepository.findBySubstituteUser_IdAndStatus(userId, SubstituteStatus.APPROVED);
+        for (Substitute substitute : substituteSchedules) {
+            Schedule schedule = substitute.getSchedule();
+            if (schedule.getWorkDate().toString().compareTo(startDate) >= 0 && schedule.getWorkDate().toString().compareTo(endDate) <= 0) {
+                ScheduleDate scheduleDate = new ScheduleDate();
+                scheduleDate.setWorkDate(schedule.getWorkDate());
+                scheduleDate.setStartTime(schedule.getStartTime());
+                scheduleDate.setEndTime(schedule.getEndTime());
+                // note : 000 근무자의 00:00 ~ 00:00 근무 대타
+                if (schedule.getNote() != null) {
+                    String note = schedule.getNote() + String.format("\n%s 근무자의 %s ~ %s 근무 대타", schedule.getUser().getName(), schedule.getStartTime(), schedule.getEndTime());
+                    scheduleDate.setNote(note);
+                } else {
+                    String note = String.format("%s 근무자의 %s ~ %s 근무 대타", schedule.getUser().getName(), schedule.getStartTime(), schedule.getEndTime());
+                    scheduleDate.setNote(note);
+                }
+                scheduleDates.add(scheduleDate);
+            }
+        }
+
+        // 날짜 순서대로 정렬
+        scheduleDates.sort((s1, s2) -> s1.getWorkDate().compareTo(s2.getWorkDate()));
+
         response.setScheduleDates(scheduleDates);
         return response;
     }
