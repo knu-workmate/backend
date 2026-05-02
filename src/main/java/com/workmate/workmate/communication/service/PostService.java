@@ -67,4 +67,46 @@ public class PostService {
                         post.getCreatedAt()
                 )).collect(Collectors.toList());
     }
+
+    // 게시글 상세 조회
+
+    @Transactional(readOnly = true)
+    public PostDto.PostDetailResponse getPostDetail(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        return new PostDto.PostDetailResponse(
+                post.getId(), post.getTitle(), post.getContent(),
+                post.getUser().getName(), post.getUser().getId(), post.getCreatedAt()
+        );
+    }
+
+     // 게시글 수정 (PATCH)
+    @Transactional
+    public void updatePost(Long postId, PostDto.UpdateRequest req) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        // [보안] 작성자 본인 확인
+        if (!post.getUser().getId().equals(currentUser.getUserId())) {
+            throw new RuntimeException("수정 권한이 없습니다.");
+        }
+
+        post.setTitle(req.getTitle());
+        post.setContent(req.getContent());
+    }
+
+    //게시글 삭제 (DELETE)
+    @Transactional
+    public void deletePost(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        // [보안] 작성자 본인 확인
+        if (!post.getUser().getId().equals(currentUser.getUserId())) {
+            throw new RuntimeException("삭제 권한이 없습니다.");
+        }
+
+        postRepository.delete(post);
+    }
 }

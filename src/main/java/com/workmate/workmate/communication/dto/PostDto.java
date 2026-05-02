@@ -35,4 +35,27 @@ public class PostDto {
         private LocalDateTime createdAt;
     }
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(description = "게시글 수정 요청")
+    public static class UpdateRequest {
+        @Schema(description = "수정할 제목")
+        private String title;
+        @Schema(description = "수정할 내용")
+        private String content;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Schema(description = "게시글 상세 조회 응답")
+    public static class PostDetailResponse {
+        private Long postId;
+        private String title;
+        private String content; // 본문 포함
+        private String authorName;
+        private Long authorId;
+        private LocalDateTime createdAt;
+    }
+
 }
