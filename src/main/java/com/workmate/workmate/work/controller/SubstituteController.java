@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,9 +51,7 @@ public class SubstituteController {
         return ResponseEntity.ok(substituteService.getPendingApprovals());
     }
 
-    /**
-     * 조회 API: 직원용 구인 중 목록
-     */
+    // 지원 가능한 대타 리스트 리턴
     @Operation(summary = "[직원] 지원 가능한 대타 조회", description = "현재 지원 가능한(REQUESTED 상태인) 대타 요청 목록을 가져옵니다.")
     @GetMapping("/available")
     public ResponseEntity<List<SubstituteDto.Response>> getAvailableList() {

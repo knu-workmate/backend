@@ -17,4 +17,5 @@ public interface SubstituteRepository extends JpaRepository<Substitute, Long> {
     // ADMIN 전용, 매칭된 대타 리스트 반환
     List<Substitute> findByStatus(SubstituteStatus status);
 
+
 }
