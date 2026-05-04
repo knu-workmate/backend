@@ -49,10 +49,12 @@ public class ScheduleService {
             // 충돌이 없는 경우 스케줄 저장
             Schedule schedule = new Schedule();
             User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            Workplace workplace = user.getWorkplace();
             schedule.setUser(user);
             schedule.setWorkDate(request.getWorkDate());
             schedule.setStartTime(request.getStartTime());
             schedule.setEndTime(request.getEndTime());
+            schedule.setWorkplace(workplace);
             if(request.getNote() != null) {
                 schedule.setNote(request.getNote());
             }
