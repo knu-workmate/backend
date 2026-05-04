@@ -2,11 +2,17 @@ package com.workmate.workmate.work.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.Builder;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Schema(description = "스케줄 생성 요청 DTO")
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ScheduleRequest {
     // 사용자 id와 근무지 id는 CurrentUser에서 가져오기 때문에 요청 DTO에는 포함하지 않습니다.
 
