@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.workmate.workmate.work.entity.Schedule;
 import java.util.List;
 import java.time.LocalDate;
+import com.workmate.workmate.user.entity.User;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByUser_Id(Long userId);
@@ -11,4 +12,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByWorkplace_Id(Long workplaceId);
     List<Schedule> findByUserIdAndWorkDate(Long userId, LocalDate workDate);
     List<Schedule> findByWorkplace_IdAndWorkDate(Long workplaceId, LocalDate workDate);
+    List<Schedule> findByUserAndWorkDate(User user, LocalDate workDate);
 }

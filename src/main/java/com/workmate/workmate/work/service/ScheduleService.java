@@ -185,6 +185,12 @@ public class ScheduleService {
         return deletedSchedules;
     }
 
+    /**
+     * 스케줄 수정 메서드
+     * @param schedulePatchRequest 수정할 스케줄 정보가 담긴 DTO
+     * @param userId 현재 로그인한 사용자 ID
+     * @return 수정된 스케줄 정보가 담긴 DTO
+     */
     public ScheduleResponse updateSchedule(SchedulePatchRequest schedulePatchRequest, Long userId) {
         Schedule schedule = scheduleRepository.findById(schedulePatchRequest.getScheduleId()).orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
         if (!schedule.getUser().getId().equals(userId)) {
@@ -231,6 +237,115 @@ public class ScheduleService {
             throw new IllegalArgumentException("관리자 권한이 없거나 해당 스케줄의 관리자가 아닙니다.");
         }
         return updateSchedule(schedulePatchRequest, scheduleRepository.findById(schedulePatchRequest.getScheduleId()).orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다.")).getUser().getId());
+    }
+
+    public ScheduleResponse getNextSchedule(Long userId) {
+        // 내 스케줄 중 현재 날짜 이후 가장 가깝고, 승인된 대타가 없는 스케줄 조회
+        List<Schedule> schedules = scheduleRepository.findByUser_Id(userId);
+        LocalDate today = LocalDate.now();
+        Schedule nextSchedule = null;
+        for (Schedule schedule : schedules) {
+            if (schedule.getWorkDate().isAfter(today)) {
+                // 해당 스케줄에 승인된 대타가 있는지 확인
+                Optional<Substitute> substituteOpt = substituteRepository.findBySchedule_IdAndStatus(schedule.getId(), SubstituteStatus.APPROVED);
+                if (substituteOpt.isEmpty()) {
+                    if (nextSchedule == null || schedule.getWorkDate().isBefore(nextSchedule.getWorkDate())) {
+                        nextSchedule = schedule;
+                    }
+                }
+            }
+        }
+
+        // 내가 대타하는 승인된 대타 일정이 있는지 조회
+        List<Substitute> approvedSubstitutes = substituteRepository.findBySubstituteUser_IdAndStatus(userId, SubstituteStatus.APPROVED);
+        for (Substitute substitute : approvedSubstitutes) {
+            Schedule schedule = substitute.getSchedule();
+            if (schedule.getWorkDate().isAfter(today)) {
+                if (nextSchedule == null || schedule.getWorkDate().isBefore(nextSchedule.getWorkDate())) {
+                    nextSchedule = schedule;
+                }
+            }
+        }
+        if (nextSchedule == null) {
+            return null; // 다음 스케줄이 없는 경우 null 반환
+        }
+        ScheduleResponse response = new ScheduleResponse();
+        response.setId(nextSchedule.getId());
+        response.setUserId(nextSchedule.getUser().getId());
+        response.setUserName(nextSchedule.getUser().getName());
+        response.setWorkplaceId(nextSchedule.getUser().getWorkplace().getId());
+        response.setWorkplaceName(nextSchedule.getUser().getWorkplace().getName());
+        response.setWorkDate(nextSchedule.getWorkDate());
+        response.setStartTime(nextSchedule.getStartTime());
+        response.setEndTime(nextSchedule.getEndTime());
+        response.setNote(nextSchedule.getNote());
+        return response;
+    }
+
+    /**
+     * 특정 날짜와 특정 사용자의 스케줄 조회 메서드
+     * @param userId 조회할 사용자 ID
+     * @param date 조회할 날짜
+     * @return 조회된 스케줄 정보가 담긴 DTO 리스트
+     */
+    public List<ScheduleResponse> getScheduleDay(Long userId, LocalDate date) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        List<Schedule> schedules = scheduleRepository.findByUserAndWorkDate(user, date);
+        List<ScheduleResponse> response = new ArrayList<>();
+        if (schedules.isEmpty()) {
+            return null; // 해당 날짜에 스케줄이 없는 경우 null 반환
+        }
+        for (Schedule schedule : schedules) {
+            ScheduleResponse scheduleResponse = new ScheduleResponse();
+            scheduleResponse.setId(schedule.getId());
+            scheduleResponse.setUserId(schedule.getUser().getId());
+            scheduleResponse.setUserName(schedule.getUser().getName());
+            scheduleResponse.setWorkplaceId(schedule.getUser().getWorkplace().getId());
+            scheduleResponse.setWorkplaceName(schedule.getUser().getWorkplace().getName());
+            scheduleResponse.setWorkDate(schedule.getWorkDate());
+            scheduleResponse.setStartTime(schedule.getStartTime());
+            scheduleResponse.setEndTime(schedule.getEndTime());
+            scheduleResponse.setNote(schedule.getNote());
+            response.add(scheduleResponse);
+        }
+        return response;
+    }
+
+    /**
+     * 특정 날짜의 모든 사용자의 스케줄 조회 메서드 (대타로 인해 변경된 일정도 포함)
+     * @param userId 사업장 기준이 되는 사용자 ID
+     * @param date 조회할 날짜
+     * @return 조회된 스케줄 정보가 담긴 DTO 리스트
+     */
+    public EntireScheduleResponse getEntireScheduleDay(Long userId,LocalDate date) {
+        Workplace workplace = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")).getWorkplace();
+        List<Schedule> schedules = scheduleRepository.findByWorkplace_IdAndWorkDate(workplace.getId(), date);
+        EntireScheduleResponse response = new EntireScheduleResponse();
+        response.setWorkDate(date);
+        List<ScheduleWorker> scheduleWorkers = new ArrayList<>();
+        for (Schedule schedule : schedules) {
+            ScheduleWorker worker = new ScheduleWorker();
+            worker.setUserId(schedule.getUser().getId());
+            worker.setUserName(schedule.getUser().getName());
+            worker.setStartTime(schedule.getStartTime());
+            worker.setEndTime(schedule.getEndTime());
+            worker.setNote(schedule.getNote());
+
+            // 해당 스케줄이 대타로 인해 변경된 일정인지 확인
+            Optional<Substitute> substituteOpt = substituteRepository.findBySchedule_IdAndStatus(schedule.getId(), SubstituteStatus.APPROVED);
+            if (substituteOpt.isPresent()) {
+                Substitute substitute = substituteOpt.get();
+                worker.setNote(worker.getNote() + String.format("\n%s 근무자의 %s ~ %s 근무 대타", schedule.getUser().getName(), schedule.getStartTime(), schedule.getEndTime()));
+                worker.setStartTime(substitute.getSchedule().getStartTime());
+                worker.setEndTime(substitute.getSchedule().getEndTime());
+                worker.setUserId(substitute.getSubstituteUser().getId());
+                worker.setUserName(substitute.getSubstituteUser().getName());
+            }
+
+            scheduleWorkers.add(worker);
+        }
+        response.setScheduleWorkers(scheduleWorkers);
+        return response;
     }
 
     /**
