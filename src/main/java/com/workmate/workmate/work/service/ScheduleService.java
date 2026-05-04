@@ -1,22 +1,23 @@
 package com.workmate.workmate.work.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import com.workmate.workmate.work.dto.ScheduleRequest;
-import com.workmate.workmate.work.dto.ScheduleResponse;
-import com.workmate.workmate.work.repository.ScheduleRepository;
-import com.workmate.workmate.work.entity.Schedule;
-import com.workmate.workmate.global.exception.ErrorResponse;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.workmate.workmate.user.entity.User;
 import com.workmate.workmate.user.entity.Workplace;
 import com.workmate.workmate.user.repository.UserRepository;
-import java.util.ArrayList;
-import com.workmate.workmate.work.dto.ScheduleGetResponse;
 import com.workmate.workmate.work.dto.ScheduleDate;
-import com.workmate.workmate.user.entity.User;
-import org.springframework.stereotype.Service;
-import com.workmate.workmate.work.repository.SubstituteRepository;
+import com.workmate.workmate.work.dto.ScheduleGetResponse;
+import com.workmate.workmate.work.dto.ScheduleRequest;
+import com.workmate.workmate.work.dto.ScheduleResponse;
+import com.workmate.workmate.work.entity.Schedule;
 import com.workmate.workmate.work.entity.Substitute;
-import java.util.Optional;
 import com.workmate.workmate.work.entity.SubstituteStatus;
+import com.workmate.workmate.work.repository.ScheduleRepository;
+import com.workmate.workmate.work.repository.SubstituteRepository;
 
 @Service
 public class ScheduleService {
@@ -49,15 +50,16 @@ public class ScheduleService {
             // 충돌이 없는 경우 스케줄 저장
             Schedule schedule = new Schedule();
             User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+            Workplace workplace = user.getWorkplace();
             schedule.setUser(user);
             schedule.setWorkDate(request.getWorkDate());
             schedule.setStartTime(request.getStartTime());
             schedule.setEndTime(request.getEndTime());
+            schedule.setWorkplace(workplace);
             if(request.getNote() != null) {
                 schedule.setNote(request.getNote());
             }
             scheduleRepository.save(schedule);
-            Workplace workplace = user.getWorkplace();
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
             response.setUserId(user.getId());

@@ -1,43 +1,33 @@
 package com.workmate.workmate.work.controller;
 
 // import annotation
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-// import service
-import com.workmate.workmate.work.service.ScheduleService;
-
-
-// import entity, dto
-import com.workmate.workmate.user.entity.User;
-import com.workmate.workmate.user.entity.Workplace;
-import com.workmate.workmate.work.entity.Schedule;
-import com.workmate.workmate.global.security.CurrentUser;
 import com.workmate.workmate.global.exception.ErrorResponse;
+import com.workmate.workmate.global.security.CurrentUser;
 import com.workmate.workmate.work.dto.ScheduleGetResponse;
 import com.workmate.workmate.work.dto.ScheduleRequest;
 import com.workmate.workmate.work.dto.ScheduleResponse;
+import com.workmate.workmate.work.service.ScheduleService;
 
-// inport Swagger
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-
-// import java util
-import java.util.List;
-import java.time.LocalDate;
-import java.time.DayOfWeek;
-import java.time.temporal.TemporalAdjusters;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
 @RestController
@@ -119,5 +109,8 @@ public class ScheduleController {
         ScheduleGetResponse scheduleGetResponse = scheduleService.getScheduleByDateRange(userId, startDate.toString(), endDate.toString());
         return ResponseEntity.ok(scheduleGetResponse);
     }
+
+    // 모든 근무자 스케줄 조회
+    // @GetMapping("/all")
     
 }
