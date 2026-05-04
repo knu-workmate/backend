@@ -40,5 +40,26 @@ public class PostController {
         return ResponseEntity.ok(postService.getPostList(boardId, page, size));
     }
 
+    @Operation(summary = "게시글 상세 조회", description = "본문을 포함한 게시글의 상세 내용을 가져옵니다.")
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostDto.PostDetailResponse> getPost(@PathVariable Long postId) {
+        return ResponseEntity.ok(postService.getPostDetail(postId));
+    }
+
+    @Operation(summary = "게시글 수정", description = "작성자 본인만 수정 가능합니다.")
+    @PatchMapping("/{postId}")
+    public ResponseEntity<Void> updatePost(
+            @PathVariable Long postId,
+            @RequestBody PostDto.UpdateRequest req) {
+        postService.updatePost(postId, req);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "게시글 삭제", description = "작성자 본인만 삭제 가능합니다.")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+        postService.deletePost(postId);
+        return ResponseEntity.ok().build();
+    }
 
 }

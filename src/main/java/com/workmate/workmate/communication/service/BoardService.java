@@ -6,7 +6,6 @@ import com.workmate.workmate.communication.repository.BoardRepository;
 import com.workmate.workmate.user.entity.User;
 import com.workmate.workmate.user.entity.Workplace;
 import com.workmate.workmate.user.repository.UserRepository;
-import com.workmate.workmate.user.repository.WorkplaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final WorkplaceRepository workplaceRepository;
     private final CurrentUser currentUser;
     private final UserRepository userRepository;
 
@@ -67,5 +65,41 @@ public class BoardService {
                 )).collect(Collectors.toList());
     }
 
+
+    //패치
+    @Transactional
+    public void updateBoard(Long boardId, BoardDto.BoardUpdate req) {
+        // 1. 유저의 사업장 정보 가져오기
+        User user = userRepository.findById(currentUser.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // 2. 게시판 조회
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+        // 자기 게시판인지 확인
+        if (!board.getWorkplace().getId().equals(user.getWorkplace().getId())) {
+            throw new RuntimeException("해당 게시판을 수정할 권한이 없습니다.");
+        }
+
+        board.setName(req.getBoardName());
+        board.setType(req.getType());
+    }
+
+    //삭제
+    @Transactional
+    public void deleteBoard(Long boardId) {
+        User user = userRepository.findById(currentUser.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new RuntimeException("게시판을 찾을 수 없습니다."));
+
+        // 내 사업장 게시판인지 검증
+        if (!board.getWorkplace().getId().equals(user.getWorkplace().getId())) {
+            throw new RuntimeException("해당 게시판을 삭제할 권한이 없습니다.");
+        }
+
+        boardRepository.delete(board);
+    }
 
 }
