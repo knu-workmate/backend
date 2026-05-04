@@ -59,7 +59,6 @@ public class ScheduleService {
                 schedule.setNote(request.getNote());
             }
             scheduleRepository.save(schedule);
-            Workplace workplace = user.getWorkplace();
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
             response.setUserId(user.getId());
