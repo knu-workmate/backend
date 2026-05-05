@@ -33,4 +33,12 @@ public class SubstituteDto {
         private SubstituteStatus status;
         private LocalDateTime createdAt;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @Schema(description = "거절 사유")
+    public static class RejectRequest {
+        private String reason; // 거절 사유
+    }
 }

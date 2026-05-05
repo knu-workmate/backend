@@ -57,5 +57,17 @@ public class SubstituteController {
     public ResponseEntity<List<SubstituteDto.Response>> getAvailableList() {
         return ResponseEntity.ok(substituteService.getAvailableSubstitutes());
     }
+
+
+    // 거절
+    @Operation(summary = "[점주] 대타 지원 거절(반려)", description = "지원자를 거절합니다. 거절 사유를 입력해야 하며, 상태는 다시 구인 중(REQUESTED)으로 복구됩니다.")
+    @PatchMapping("/{substituteId}/reject")
+    public ResponseEntity<Void> reject(
+            @PathVariable Long substituteId,
+            @RequestBody SubstituteDto.RejectRequest req) {
+
+        substituteService.rejectSubstitute(substituteId, req.getReason());
+        return ResponseEntity.ok().build();
+    }
 }
 
