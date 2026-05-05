@@ -14,8 +14,10 @@ public interface SubstituteRepository extends JpaRepository<Substitute, Long> {
     // 우리 매장(Workplace)의 모든 대타 신청글 조회
     List<Substitute> findBySchedule_Workplace_Id(Long workplaceId);
 
+
+    List<Substitute> findBySubstituteUser_IdAndStatus(Long substituteUserId, SubstituteStatus status);
+    Optional<Substitute> findBySchedule_IdAndStatus(Long scheduleId, SubstituteStatus status);
+
     // ADMIN 전용, 매칭된 대타 리스트 반환
     List<Substitute> findByStatus(SubstituteStatus status);
-
-
 }

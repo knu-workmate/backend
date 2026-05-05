@@ -14,6 +14,9 @@ public class SubstituteDto {
     public static class CreateRequest {
         @Schema(description = "대상 스케줄 ID")
         private Long scheduleId;
+
+        @Schema(description = "대타 신청 사유")
+        private String note;
     }
 
     @Getter
