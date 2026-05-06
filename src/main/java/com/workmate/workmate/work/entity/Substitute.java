@@ -56,6 +56,9 @@ public class Substitute {
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
+    @Column(name = "note")
+    private String note;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
