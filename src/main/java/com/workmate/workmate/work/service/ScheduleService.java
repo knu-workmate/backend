@@ -1,41 +1,43 @@
 package com.workmate.workmate.work.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.time.LocalDate;
 
 import org.springframework.stereotype.Service;
 
+import com.workmate.workmate.user.entity.Role;
 import com.workmate.workmate.user.entity.User;
 import com.workmate.workmate.user.entity.Workplace;
 import com.workmate.workmate.user.repository.UserRepository;
+import com.workmate.workmate.work.dto.EntireScheduleResponse;
 import com.workmate.workmate.work.dto.ScheduleDate;
 import com.workmate.workmate.work.dto.ScheduleGetResponse;
+import com.workmate.workmate.work.dto.SchedulePatchRequest;
 import com.workmate.workmate.work.dto.ScheduleRequest;
 import com.workmate.workmate.work.dto.ScheduleResponse;
+import com.workmate.workmate.work.dto.ScheduleWorker;
 import com.workmate.workmate.work.entity.Schedule;
 import com.workmate.workmate.work.entity.Substitute;
 import com.workmate.workmate.work.entity.SubstituteStatus;
 import com.workmate.workmate.work.repository.ScheduleRepository;
 import com.workmate.workmate.work.repository.SubstituteRepository;
-import com.workmate.workmate.work.dto.EntireScheduleResponse;
-import com.workmate.workmate.work.dto.ScheduleWorker;
-import com.workmate.workmate.work.dto.SchedulePatchRequest;
-import com.workmate.workmate.user.entity.Role;
+import com.workmate.workmate.work.repository.SubstituteHistoryRepository;
+import com.workmate.workmate.work.entity.SubstituteHistory;
 
 @Service
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
     private final SubstituteRepository substituteRepository;
+    private final SubstituteHistoryRepository substituteHistoryRepository;
 
-    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository, SubstituteRepository substituteRepository) {
+    public ScheduleService(ScheduleRepository scheduleRepository, UserRepository userRepository, SubstituteRepository substituteRepository, SubstituteHistoryRepository substituteHistoryRepository) {
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
         this.substituteRepository = substituteRepository;
+        this.substituteHistoryRepository = substituteHistoryRepository;
     }
 
     /**
@@ -124,6 +126,15 @@ public class ScheduleService {
                 throw new IllegalArgumentException("사용자에게 해당 스케줄이 존재하지 않습니다.");
             }
 
+            // 삭제 전에 해당 스케줄을 참조하는 대타가 있다면 삭제
+            List<Substitute> substitutes = substituteRepository.findBySchedule_Id(schedule.getId());
+            for (Substitute substitute : substitutes) {
+                // 대타 삭제 전에 해당 대타를 참조하는 이력이 있다면 이력도 함께 삭제
+                List<SubstituteHistory> substituteHistories = substituteHistoryRepository.findBySubstitute(substitute);
+                substituteHistoryRepository.deleteAll(substituteHistories);
+                substituteRepository.delete(substitute);
+            }
+
             Workplace workplace = schedule.getUser().getWorkplace();
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
@@ -168,6 +179,16 @@ public class ScheduleService {
         for (Long scheduleId : scheduleIds) {
             Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
             Workplace workplace = schedule.getUser().getWorkplace();
+
+            // 삭제 전에 해당 스케줄을 참조하는 대타가 있다면 삭제
+            List<Substitute> substitutes = substituteRepository.findBySchedule_Id(schedule.getId());
+            for (Substitute substitute : substitutes) {
+                // 대타 삭제 전에 해당 대타를 참조하는 이력이 있다면 이력도 함께 삭제
+                List<SubstituteHistory> substituteHistories = substituteHistoryRepository.findBySubstitute(substitute);
+                substituteHistoryRepository.deleteAll(substituteHistories);
+                substituteRepository.delete(substitute);
+            }
+
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
             response.setUserId(schedule.getUser().getId());
