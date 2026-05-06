@@ -8,6 +8,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.workmate.workmate.work.entity.SubstituteHistory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,9 @@ public class SubstituteRepositoryTest {
 
     @Autowired
     private WorkplaceRepository workplaceRepository;
+
+    @Autowired
+    private SubstituteHistoryRepository substituteHistoryRepository;
 
     private User requester;
     private User substituteUser;
@@ -218,5 +223,68 @@ public class SubstituteRepositoryTest {
         assertEquals(1, found.size());
         assertNull(found.get(0).getSubstituteUser());
         assertEquals(SubstituteStatus.APPROVED, found.get(0).getStatus());
+    }
+
+    @Test
+    @DisplayName("[피드백 반영] 대타 신청 시 사유(note) 저장 검증")
+    void testSaveWithNote() {
+        // Given
+        substituteA.setNote("갑작스러운 가족 행사로 인해 대타 요청합니다.");
+
+        // When
+        Substitute saved = substituteRepository.save(substituteA);
+
+        // Then
+        assertEquals("갑작스러운 가족 행사로 인해 대타 요청합니다.", saved.getNote());
+    }
+
+    @Test
+    @DisplayName("[피드백 반영] 상태 변경 시 이력(History) 저장 검증")
+    void testSaveHistory() {
+        // Given: 대타 요청 하나 저장
+        Substitute savedSub = substituteRepository.save(substituteA);
+
+        SubstituteHistory history = new SubstituteHistory();
+        history.setSubstitute(savedSub);
+        history.setStatus("PENDING_APPROVAL");
+        history.setReason("직원 '대타자'님이 지원함");
+        history.setProcessorId(substituteUser.getId());
+
+        // When
+        SubstituteHistory savedHistory = substituteHistoryRepository.save(history);
+
+        // Then
+        assertEquals(savedSub.getId(), savedHistory.getSubstitute().getId());
+        assertEquals("PENDING_APPROVAL", savedHistory.getStatus());
+    }
+
+    @Test
+    @DisplayName("[피드백 반영] 점주 거절 시 상태가 REQUESTED로 복구되는지 검증")
+    void testRejectAndRestoreStatus() {
+        // 1. Given: 누군가 지원해서 '승인 대기' 상태인 대타 건
+        substituteA.setStatus(SubstituteStatus.PENDING_APPROVAL);
+        substituteA.setSubstituteUser(substituteUser);
+        Substitute target = substituteRepository.save(substituteA);
+
+        // 2. When: 점주가 거절 로직 수행 (Service 로직 시뮬레이션)
+        // 이력 남기기
+        SubstituteHistory rejectLog = new SubstituteHistory();
+        rejectLog.setSubstitute(target);
+        rejectLog.setStatus("REJECTED_BY_OWNER");
+        rejectLog.setReason("해당 날짜에는 숙련된 인원이 필요합니다.");
+        substituteHistoryRepository.save(rejectLog);
+
+        // 상태 복구
+        target.setStatus(SubstituteStatus.REQUESTED);
+        target.setSubstituteUser(null); // 지원자 정보 삭제
+        Substitute restored = substituteRepository.save(target);
+
+        // 3. Then: 상태는 다시 REQUESTED여야 하고, 지원자는 없어야 함
+        assertEquals(SubstituteStatus.REQUESTED, restored.getStatus());
+        assertNull(restored.getSubstituteUser());
+
+        // 이력이 잘 남았는지도 확인
+        List<SubstituteHistory> histories = substituteHistoryRepository.findBySubstitute_IdOrderByCreatedAtDesc(target.getId());
+        assertTrue(histories.stream().anyMatch(h -> h.getStatus().equals("REJECTED_BY_OWNER")));
     }
 }
