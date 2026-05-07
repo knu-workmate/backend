@@ -176,4 +176,70 @@ class UserServiceTest {
 
         assertEquals("새 비밀번호는 최소 6자 이상이어야 합니다.", exception.getMessage());
     }
+
+    @Test
+    void getProfile_deletedUser_throwsRuntimeException() {
+        Long userId = 1L;
+        
+        User deletedUser = new User();
+        deletedUser.setId(userId);
+        deletedUser.setEmail("deleted@example.com");
+        deletedUser.setName("삭제된 사용자");
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setDeleted(true);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(deletedUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> userService.getProfile(userId));
+
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    void updateProfile_deletedUser_throwsRuntimeException() {
+        Long userId = 1L;
+        Workplace workplace = new Workplace();
+        workplace.setName("회사A");
+
+        User deletedUser = new User();
+        deletedUser.setId(userId);
+        deletedUser.setEmail("deleted@example.com");
+        deletedUser.setName("삭제된 사용자");
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setWorkplace(workplace);
+        deletedUser.setDeleted(true);
+
+        ProfileResponse profileRequest = new ProfileResponse(
+                "newuser@example.com",
+                "김철수",
+                Role.ADMIN,
+                "회사A"
+        );
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(deletedUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> userService.updateProfile(userId, profileRequest));
+
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    void updatePassword_deletedUser_throwsRuntimeException() {
+        Long userId = 1L;
+        User deletedUser = new User();
+        deletedUser.setId(userId);
+        deletedUser.setPassword("current123");
+        deletedUser.setDeleted(true);
+
+        PasswordRequest request = new PasswordRequest("current123", "newPassword123");
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(deletedUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> userService.updatePassword(userId, request));
+
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
 }

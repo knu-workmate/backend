@@ -14,15 +14,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import com.workmate.workmate.global.security.CurrentUser;
 
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "인증", description = "사용자 로그인 및 인증 관련 API")
 public class AuthController {
     private final AuthService auth;
-
-    public AuthController(AuthService auth) {
+    private final CurrentUser currentUser;
+    public AuthController(AuthService auth, CurrentUser currentUser) {
         this.auth = auth;
+        this.currentUser = currentUser;
     }
 
     @Operation(summary = "사용자 로그인", description = "이메일과 비밀번호로 인증 후 JWT 반환")
@@ -45,5 +47,18 @@ public class AuthController {
     public ResponseEntity<SignupResponse> signup(@RequestBody SignupRequest req) {
         SignupResponse response = auth.signup(req);
         return ResponseEntity.status(201).body(response);
+    }
+
+    @Operation(summary = "사용자 탈퇴", description = "인증된 사용자가 자신의 계정을 삭제")
+    @ApiResponse(responseCode = "200", description = "탈퇴 성공")
+    @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(schema = @Schema(implementation = com.workmate.workmate.global.exception.ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "사용자 없음", content = @Content(schema = @Schema(implementation = com.workmate.workmate.global.exception.ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "사용자 없음", content = @Content(schema = @Schema(implementation = com.workmate.workmate.global.exception.ErrorResponse.class)))
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<String> withdraw() {
+        Long userId = currentUser.getUserId();
+        auth.withdraw(userId);
+        // 탈퇴 완료 시 "탈퇴 완료되었습니다" 메세지 담아서 return 해주기
+        return ResponseEntity.ok("탈퇴 완료되었습니다.");
     }
 }

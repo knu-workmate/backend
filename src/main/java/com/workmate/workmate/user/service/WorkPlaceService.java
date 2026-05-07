@@ -68,15 +68,24 @@ public class WorkPlaceService {
      */
     public WorkPlaceInfo getWorkplaceInfo() {
         User user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+        if (user.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
         Workplace workplace = user.getWorkplace();
+        if (workplace == null) {
+            throw new RuntimeException("사업장에 속해있지 않습니다.");
+        }
+        if (workplace.getDeleted()) {
+            throw new RuntimeException("삭제된 사업장입니다.");
+        }
         List<User> users = userRepository.findByWorkplace(workplace);
         List<UserInfo> userInfos = users.stream()
-                .filter(u -> !u.getRole().equals(Role.ADMIN))
+                .filter(u -> !u.getRole().equals(Role.ADMIN) && !u.getDeleted())
                 .map(u -> new UserInfo(u.getId(), u.getName(), u.getRole()))
                 .collect(Collectors.toList());
 
         List<UserInfo> adminInfos = users.stream()
-                .filter(u -> u.getRole().equals(Role.ADMIN))
+                .filter(u -> u.getRole().equals(Role.ADMIN) && !u.getDeleted())
                 .map(u -> new UserInfo(u.getId(), u.getName(), u.getRole()))
                 .collect(Collectors.toList());
 
@@ -106,7 +115,8 @@ public class WorkPlaceService {
             u.setWorkplace(null);
             userRepository.save(u);
         }
-        workplaceRepository.delete(workplace);
+        workplace.setDeleted(true);
+        workplaceRepository.save(workplace);
         return deletedWorkplace;
     }
 
@@ -116,6 +126,7 @@ public class WorkPlaceService {
     public List<SearchResponse> getWorkplaces(String name) {
         List<Workplace> workplaces = workplaceRepository.findByNameContaining(name);
         return workplaces.stream()
+                .filter(workplace -> !workplace.getDeleted())
                 .map(workplace -> new SearchResponse(workplace.getId(), workplace.getName()))
                 .collect(Collectors.toList());
     }
@@ -125,9 +136,19 @@ public class WorkPlaceService {
      */
     public List<UserInfo> getWorkplaceUsers(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+        if (user.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
         Workplace workplace = user.getWorkplace();
+        if (workplace == null) {
+            throw new RuntimeException("사업장에 속해있지 않습니다.");
+        }
+        if (workplace.getDeleted()) {
+            throw new RuntimeException("삭제된 사업장입니다.");
+        }
         List<User> users = userRepository.findByWorkplace(workplace);
         return users.stream()
+                .filter(u -> !u.getDeleted())
                 .map(u -> new UserInfo(u.getId(), u.getName(), u.getRole()))
                 .collect(Collectors.toList());
     }
@@ -142,8 +163,15 @@ public class WorkPlaceService {
             throw new UnauthorizedException("관리자 권한이 필요합니다.");
         }
 
+        if(currentUserEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
+
         User newAdminEntity = userRepository.findById(newAdminId)
                 .orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+        if(newAdminEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
         newAdminEntity.setRole(Role.ADMIN);
         userRepository.save(newAdminEntity);
         return new UserInfo(newAdminEntity.getId(), newAdminEntity.getName(), newAdminEntity.getRole());
@@ -159,8 +187,15 @@ public class WorkPlaceService {
             throw new UnauthorizedException("관리자 권한이 필요합니다.");
         }
 
+        if(currentUserEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
+
         User adminEntity = userRepository.findById(adminId)
                 .orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+        if(adminEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
         adminEntity.setRole(Role.WORKER);
         userRepository.save(adminEntity);
         return new UserInfo(adminEntity.getId(), adminEntity.getName(), adminEntity.getRole());
@@ -189,8 +224,15 @@ public class WorkPlaceService {
             throw new UnauthorizedException("관리자 권한이 필요합니다.");
         }
 
+        if(currentUserEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
+
         User workerEntity = userRepository.findById(workerId)
                 .orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+        if(workerEntity.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
         workerEntity.setWorkplace(null);
         userRepository.save(workerEntity);
         return new UserInfo(workerEntity.getId(), workerEntity.getName(), workerEntity.getRole());
@@ -203,6 +245,9 @@ public class WorkPlaceService {
         User user = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
         Workplace workplace = workplaceRepository.findById(workplaceId)
                 .orElseThrow(() -> new RuntimeException("사업장을 찾을 수 없습니다."));
+        if (workplace.getDeleted()) {
+            throw new RuntimeException("삭제된 사업장입니다.");
+        }
 
         user.setWorkplace(workplace);
         userRepository.save(user);
@@ -217,6 +262,10 @@ public class WorkPlaceService {
         User user = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
         Workplace workplace = workplaceRepository.findByInviteCode(inviteCode)
                 .orElseThrow(() -> new RuntimeException("유효하지 않은 초대코드입니다."));
+
+        if(workplace.getDeleted()) {
+            throw new RuntimeException("삭제된 사업장입니다.");
+        }
 
         user.setWorkplace(workplace);
         userRepository.save(user);

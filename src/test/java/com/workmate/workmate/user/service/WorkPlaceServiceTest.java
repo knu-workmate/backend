@@ -502,4 +502,220 @@ class WorkPlaceServiceTest {
         assertEquals(1, result.getAdmins().size());
         assertEquals(1, result.getUsers().size());
     }
+
+    @Test
+    @DisplayName("사업장 정보 조회 실패 - 삭제된 사용자")
+    void getWorkplaceInfo_deletedUser_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User deletedUser = new User();
+        deletedUser.setId(userId);
+        deletedUser.setRole(Role.ADMIN);
+        deletedUser.setName("삭제된 사용자");
+        deletedUser.setDeleted(true);
+        
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(deletedUser));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.getWorkplaceInfo());
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 정보 조회 실패 - 삭제된 사업장")
+    void getWorkplaceInfo_deletedWorkplace_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User user = new User();
+        user.setId(userId);
+        user.setRole(Role.ADMIN);
+        user.setName("관리자");
+        user.setDeleted(false);
+        
+        Workplace deletedWorkplace = new Workplace();
+        deletedWorkplace.setId(1L);
+        deletedWorkplace.setName("삭제된 사업장");
+        deletedWorkplace.setDeleted(true);
+        user.setWorkplace(deletedWorkplace);
+        
+        given(currentUser.getUserId()).willReturn(userId);
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.getWorkplaceInfo());
+        
+        assertEquals("삭제된 사업장입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 사용자 조회 실패 - 삭제된 사용자")
+    void getWorkplaceUsers_deletedUser_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User deletedUser = new User();
+        deletedUser.setId(userId);
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setDeleted(true);
+        
+        given(userRepository.findById(userId)).willReturn(Optional.of(deletedUser));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.getWorkplaceUsers(userId));
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 사용자 조회 실패 - 삭제된 사업장")
+    void getWorkplaceUsers_deletedWorkplace_throwsException() {
+        // Given
+        Long userId = 1L;
+        
+        User user = new User();
+        user.setId(userId);
+        user.setRole(Role.WORKER);
+        user.setDeleted(false);
+        
+        Workplace deletedWorkplace = new Workplace();
+        deletedWorkplace.setId(1L);
+        deletedWorkplace.setDeleted(true);
+        user.setWorkplace(deletedWorkplace);
+        
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.getWorkplaceUsers(userId));
+        
+        assertEquals("삭제된 사업장입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 부여 실패 - 삭제된 현재 사용자")
+    void assignAdmin_deletedCurrentUser_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long newAdminId = 2L;
+        
+        User deletedAdmin = new User();
+        deletedAdmin.setId(currentUserId);
+        deletedAdmin.setRole(Role.ADMIN);
+        deletedAdmin.setDeleted(true);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(deletedAdmin));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.assignAdmin(currentUserId, newAdminId));
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 부여 실패 - 삭제된 새 관리자")
+    void assignAdmin_deletedNewAdmin_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long newAdminId = 2L;
+        
+        User currentAdmin = new User();
+        currentAdmin.setId(currentUserId);
+        currentAdmin.setRole(Role.ADMIN);
+        currentAdmin.setDeleted(false);
+        
+        User deletedUser = new User();
+        deletedUser.setId(newAdminId);
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setDeleted(true);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentAdmin));
+        given(userRepository.findById(newAdminId)).willReturn(Optional.of(deletedUser));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.assignAdmin(currentUserId, newAdminId));
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 제거 실패 - 삭제된 현재 사용자")
+    void removeAdmin_deletedCurrentUser_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long adminId = 2L;
+        
+        User deletedAdmin = new User();
+        deletedAdmin.setId(currentUserId);
+        deletedAdmin.setRole(Role.ADMIN);
+        deletedAdmin.setDeleted(true);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(deletedAdmin));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.removeAdmin(currentUserId, adminId));
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("관리자 권한 제거 실패 - 삭제된 관리자")
+    void removeAdmin_deletedAdmin_throwsException() {
+        // Given
+        Long currentUserId = 1L;
+        Long adminId = 2L;
+        
+        User currentAdmin = new User();
+        currentAdmin.setId(currentUserId);
+        currentAdmin.setRole(Role.ADMIN);
+        currentAdmin.setDeleted(false);
+        
+        User deletedAdmin = new User();
+        deletedAdmin.setId(adminId);
+        deletedAdmin.setRole(Role.ADMIN);
+        deletedAdmin.setDeleted(true);
+        
+        given(userRepository.findById(currentUserId)).willReturn(Optional.of(currentAdmin));
+        given(userRepository.findById(adminId)).willReturn(Optional.of(deletedAdmin));
+        
+        // When & Then
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> workPlaceService.removeAdmin(currentUserId, adminId));
+        
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("사업장 검색 - 삭제된 사업장은 제외")
+    void searchWorkplaces_deletedWorkplace_filtered() {
+        // Given
+        Workplace activeWorkplace = new Workplace();
+        activeWorkplace.setId(1L);
+        activeWorkplace.setName("활성 사업장");
+        activeWorkplace.setDeleted(false);
+        
+        Workplace deletedWorkplace = new Workplace();
+        deletedWorkplace.setId(2L);
+        deletedWorkplace.setName("활성 사업장");
+        deletedWorkplace.setDeleted(true);
+        
+        List<Workplace> workplaces = Arrays.asList(activeWorkplace, deletedWorkplace);
+        given(workplaceRepository.findByNameContaining("활성")).willReturn(workplaces);
+        
+        // When
+        List<SearchResponse> result = workPlaceService.getWorkplaces("활성");
+        
+        // Then
+        assertEquals(1, result.size());
+        assertEquals("활성 사업장", result.get(0).getName());
+    }
 }

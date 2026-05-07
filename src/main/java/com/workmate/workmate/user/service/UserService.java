@@ -25,6 +25,11 @@ public class UserService {
     public ProfileResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (user.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
+
         // 사용자 정보를 기반으로 ProfileResponse 객체를 생성하여 반환
         return new ProfileResponse(user.getEmail(), user.getName(), user.getRole(), user.getWorkplace().getName());
     }
@@ -40,19 +45,23 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
+        if (user.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
+
         ProfileResponse currentProfile = new ProfileResponse(user.getEmail(), user.getName(), user.getRole(), user.getWorkplace().getName());
 
-        if (user.getEmail() != null) {
+        if (profileRequest.getEmail() != null) {
             user.setEmail(profileRequest.getEmail());
             currentProfile.setEmail(profileRequest.getEmail());
         }
 
-        if (user.getName() != null) {
+        if (profileRequest.getName() != null) {
             user.setName(profileRequest.getName());
             currentProfile.setName(profileRequest.getName());
         }
 
-        if (user.getRole() != null) {
+        if (profileRequest.getRole() != null) {
             user.setRole(profileRequest.getRole());
             currentProfile.setRole(profileRequest.getRole());
         }
@@ -74,6 +83,10 @@ public class UserService {
     public void updatePassword(Long userId, PasswordRequest passwordRequest) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (user.getDeleted()) {
+            throw new RuntimeException("삭제된 사용자입니다.");
+        }
 
         if (!user.getPassword().equals(passwordRequest.getCurrentPassword())) {
             throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
