@@ -41,6 +41,7 @@ class AuthServiceTest {
         user.setEmail("user@example.com");
         user.setPassword("password123");
         user.setRole(Role.WORKER);
+        user.setDeleted(false);
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
         given(jwtProvider.createToken("1", "WORKER")).willReturn("mock-token");
@@ -74,6 +75,7 @@ class AuthServiceTest {
         user.setEmail("user@example.com");
         user.setPassword("password123");
         user.setRole(Role.ADMIN);
+        user.setDeleted(false);
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
 
@@ -85,6 +87,26 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_deletedUser_throwsRuntimeException() {
+        // arrange
+        LoginRequest request = new LoginRequest("deleted@example.com", "password123");
+        User user = new User();
+        user.setId(2L);
+        user.setEmail("deleted@example.com");
+        user.setPassword("password123");
+        user.setRole(Role.WORKER);
+        user.setDeleted(true);
+
+        given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
+
+        // act / assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.login(request));
+
+        assertEquals("비활성화된 유저입니다. 로그인할 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
     void signup_validData_returnsSignupResponse() {
         // arrange
         SignupRequest request = new SignupRequest("newuser@example.com", "password123", "홍길동", 0);
@@ -93,6 +115,7 @@ class AuthServiceTest {
         savedUser.setEmail("newuser@example.com");
         savedUser.setName("홍길동");
         savedUser.setRole(Role.WORKER);
+        savedUser.setDeleted(false);
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.empty());
         given(userRepository.save(any(User.class))).willReturn(savedUser);
@@ -113,6 +136,7 @@ class AuthServiceTest {
         SignupRequest request = new SignupRequest("existing@example.com", "password123", "홍길동", 0);
         User existingUser = new User();
         existingUser.setEmail("existing@example.com");
+        existingUser.setDeleted(false);
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(existingUser));
 

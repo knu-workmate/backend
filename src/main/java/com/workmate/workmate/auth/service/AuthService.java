@@ -21,6 +21,7 @@ public class AuthService {
 
     /**
      * 사용자 로그인 메서드. 이메일과 비밀번호를 검증하여 JWT 토큰을 생성하여 반환한다.
+     * 비활성화된 유저일 경우 로그인 실패로 처리한다.
      * @param req 로그인 요청 객체로, 이메일과 비밀번호를 포함한다.
      * @return 인증이 성공하면 JWT 토큰 문자열을 반환한다.
      */
@@ -31,6 +32,11 @@ public class AuthService {
         // 비밀번호 검증 (예시)
         if (!user.getPassword().equals(req.getPassword())) {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 비활성화된 유저인지 확인
+        if (user.getDeleted()) {
+            throw new RuntimeException("비활성화된 유저입니다. 로그인할 수 없습니다.");
         }
 
         return jwtProvider.createToken(
@@ -75,6 +81,7 @@ public class AuthService {
         newUser.setPassword(req.getPassword());
         newUser.setName(req.getName());
         newUser.setRole(role);
+        newUser.setDeleted(false);
         userRepository.save(newUser);
 
         return new SignupResponse("회원가입 성공", newUser.getEmail(), newUser.getName(), newUser.getRole());
