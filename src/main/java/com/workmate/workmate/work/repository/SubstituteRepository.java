@@ -10,6 +10,7 @@ public interface SubstituteRepository extends JpaRepository<Substitute, Long> {
     List<Substitute> findByRequester_Id(Long requesterId);
     List<Substitute> findBySubstituteUser_Id(Long substituteUserId);
     List<Substitute> findByRequester_IdAndStatus(Long requesterId, SubstituteStatus status);
+    List<Substitute> findBySchedule_Id(Long scheduleId);
 
     // 우리 매장(Workplace)의 모든 대타 신청글 조회
     List<Substitute> findBySchedule_Workplace_Id(Long workplaceId);
