@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.workmate.workmate.user.entity.User;
 
 @Entity
@@ -13,6 +16,9 @@ import com.workmate.workmate.user.entity.User;
 @NoArgsConstructor
 @Table(name = "post")
 public class Post {
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

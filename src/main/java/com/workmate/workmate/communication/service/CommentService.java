@@ -51,13 +51,18 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentDto.CommentResponse> getComments(Long postId) {
         return commentRepository.findByPost_Id(postId).stream()
-                .map(comment -> CommentDto.CommentResponse.builder()
-                        .commentId(comment.getId())
-                        .content(comment.getContent())
-                        .authorName(comment.getUser().getName())
-                        .authorId(comment.getUser().getId())
-                        .createdAt(comment.getCreatedAt())
-                        .build())
+                .map(comment -> {
+                    // [수정 포인트] 댓글 작성자 삭제 여부 확인
+                    String authorName = comment.getUser().getDeleted() ? "<삭제된 유저>" : comment.getUser().getName();
+
+                    return CommentDto.CommentResponse.builder()
+                            .commentId(comment.getId())
+                            .content(comment.getContent())
+                            .authorName(authorName) // 치환된 이름 사용
+                            .authorId(comment.getUser().getId())
+                            .createdAt(comment.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 
