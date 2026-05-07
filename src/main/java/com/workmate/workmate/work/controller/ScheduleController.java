@@ -70,7 +70,7 @@ public class ScheduleController {
     
 
     @DeleteMapping("/delete")
-    @Operation(summary = "스케줄 삭제", description = "스케줄을 삭제합니다.")
+    @Operation(summary = "스케줄 삭제 (유저)", description = "유저가 스케줄을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 삭제 성공", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ScheduleResponse.class))))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -92,7 +92,7 @@ public class ScheduleController {
     }
 
     @PatchMapping("/patch")
-    @Operation(summary = "스케줄 수정", description = "스케줄을 수정합니다. 날짜는 변경이 불가하며, 시간과 노트만 수정 가능합니다.")
+    @Operation(summary = "스케줄 수정 (유저)", description = "유저가 스케줄을 수정합니다. 날짜는 변경이 불가하며, 시간과 노트만 수정 가능합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 수정 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -117,7 +117,7 @@ public class ScheduleController {
 
     // 내 다음 스케줄 조회(현재 시점으로부터 가장 가까운 미래의 스케줄 조회)
     @GetMapping("/next")
-    @Operation(summary = "내 다음 스케줄 조회", description = "현재 시점으로부터 가장 가까운 미래의 스케줄을 조회합니다. 대타로 인해 변경된 일정도 포함하여 조회합니다.")
+    @Operation(summary = "내 다음 스케줄 조회 (유저)", description = "현재 시점으로부터 가장 가까운 미래의 스케줄을 조회합니다. 대타로 인해 변경된 일정도 포함하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleResponse.class)))
     @ApiResponse(responseCode = "204", description = "다음 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -134,7 +134,7 @@ public class ScheduleController {
 
     // 기간으로 스케줄 조회 (파라미터로 받음)
     @GetMapping("/period")
-    @Operation(summary = "기간으로 내 스케줄 조회", description = "특정 기간 동안의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다.")
+    @Operation(summary = "기간으로 내 스케줄 조회 (유저)", description = "특정 기간 동안의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -149,7 +149,7 @@ public class ScheduleController {
 
     // 날짜로 스케줄 조회 (파라미터로 받음)
     @GetMapping("/date")
-    @Operation(summary = "날짜로 스케줄 조회", description = "특정 날짜의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다. 해당 날짜에 스케줄이 없는 경우 204 No Content를 반환합니다. 하나의 날짜에 스케줄이 여러 개일 수 있으니 리스트로 반환합니다.")
+    @Operation(summary = "날짜로 스케줄 조회 (유저)", description = "특정 날짜의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다. 해당 날짜에 스케줄이 없는 경우 204 No Content를 반환합니다. 하나의 날짜에 스케줄이 여러 개일 수 있으니 리스트로 반환합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "204", description = "해당 날짜에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -165,7 +165,7 @@ public class ScheduleController {
 
     // 오늘 스케줄 조회
     @GetMapping("/day")
-    @Operation(summary = "오늘 기준 내 스케줄 조회", description = "오늘을 기준으로 offset만큼 이동한 날짜의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다. 해당 날짜에 스케줄이 없는 경우 204 No Content를 반환합니다. 하나의 날짜에 스케줄이 여러 개일 수 있으니 리스트로 반환합니다. offset (-1: 어제, 0: 오늘, 1: 내일 ... 등)")
+    @Operation(summary = "오늘 기준 내 스케줄 조회 (유저)", description = "오늘을 기준으로 offset만큼 이동한 날짜의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다. 해당 날짜에 스케줄이 없는 경우 204 No Content를 반환합니다. 하나의 날짜에 스케줄이 여러 개일 수 있으니 리스트로 반환합니다. offset (-1: 어제, 0: 오늘, 1: 내일 ... 등)")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "204", description = "해당 날짜에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -182,7 +182,7 @@ public class ScheduleController {
 
     // 주간 스케줄 조회
     @GetMapping("/week")
-    @Operation(summary = "주간 내 스케줄 조회", description = "주간(월요일~일요일)의 스케줄을 조회합니다. offset으로 이전/이후 주를 조회할 수 있습니다. offset (-1: 이전 주, 0: 이번 주, 1: 다음 주 ... 등)")
+    @Operation(summary = "주간 내 스케줄 조회 (유저)", description = "주간(월요일~일요일)의 스케줄을 조회합니다. offset으로 이전/이후 주를 조회할 수 있습니다. offset (-1: 이전 주, 0: 이번 주, 1: 다음 주 ... 등)")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "204", description = "해당 주에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -203,7 +203,7 @@ public class ScheduleController {
 
     // 월간 스케줄 조회
     @GetMapping("/month")
-    @Operation(summary = "월간 내 스케줄 조회", description = "월간(1일~말일)의 스케줄을 조회합니다. offset으로 이전/이후 월을 조회할 수 있습니다. offset (-1: 이전 월, 0: 이번 월, 1: 다음 월 ... 등)")
+    @Operation(summary = "월간 내 스케줄 조회 (유저)", description = "월간(1일~말일)의 스케줄을 조회합니다. offset으로 이전/이후 월을 조회할 수 있습니다. offset (-1: 이전 월, 0: 이번 월, 1: 다음 월 ... 등)")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "204", description = "해당 월에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -224,7 +224,7 @@ public class ScheduleController {
 
     // 특정 기간 동안의 모든 근무자 스케줄 조회
     @GetMapping("/period-all")
-    @Operation(summary = "기간으로 모든 근무자 스케줄 조회", description = "특정 기간 동안의 모든 근무자 스케줄을 조회합니다. 대타로 인해 변경된 일정도 포함하여 조회합니다.")
+    @Operation(summary = "기간으로 모든 근무자 스케줄 조회 (관리자 / 유저)", description = "특정 기간 동안의 모든 근무자 스케줄을 조회합니다. 대타로 인해 변경된 일정도 포함하여 조회합니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = EntireScheduleResponse.class))))
     @ApiResponse(responseCode = "204", description = "해당 기간에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -257,7 +257,7 @@ public class ScheduleController {
 
     // 한달 동안의 모든 근무자 스케줄 조회
     @GetMapping("/month-all")
-    @Operation(summary = "월간 모든 근무자 스케줄 조회", description = "월간(1일~말일) 모든 근무자 스케줄을 조회합니다. offset으로 이전/이후 월을 조회할 수 있습니다. offset (-1: 이전 월, 0: 이번 월, 1: 다음 월 ... 등)")
+    @Operation(summary = "월간 모든 근무자 스케줄 조회 (관리자 / 유저)", description = "월간(1일~말일) 모든 근무자 스케줄을 조회합니다. offset으로 이전/이후 월을 조회할 수 있습니다. offset (-1: 이전 월, 0: 이번 월, 1: 다음 월 ... 등)")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = EntireScheduleResponse.class))))
     @ApiResponse(responseCode = "204", description = "해당 월에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -278,7 +278,7 @@ public class ScheduleController {
 
     // 일주일 동안의 모든 근무자 스케줄 조회
     @GetMapping("/week-all")
-    @Operation(summary = "주간 모든 근무자 스케줄 조회", description = "주간(월요일~일요일) 모든 근무자 스케줄을 조회합니다. offset으로 이전/이후 주를 조회할 수 있습니다. offset (-1: 이전 주, 0: 이번 주, 1: 다음 주 ... 등)")
+    @Operation(summary = "주간 모든 근무자 스케줄 조회 (관리자 / 유저)", description = "주간(월요일~일요일) 모든 근무자 스케줄을 조회합니다. offset으로 이전/이후 주를 조회할 수 있습니다. offset (-1: 이전 주, 0: 이번 주, 1: 다음 주 ... 등)")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = EntireScheduleResponse.class))))
     @ApiResponse(responseCode = "204", description = "해당 주에 스케줄이 없음", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
