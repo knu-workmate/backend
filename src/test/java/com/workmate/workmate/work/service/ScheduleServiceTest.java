@@ -59,6 +59,7 @@ class ScheduleServiceTest {
         testWorkplace = new Workplace();
         testWorkplace.setId(1L);
         testWorkplace.setName("테스트 카페");
+        testWorkplace.setDeleted(false);
 
         // 일반 사용자 설정
         testUser = new User();
@@ -67,6 +68,7 @@ class ScheduleServiceTest {
         testUser.setName("일반 사용자");
         testUser.setRole(Role.WORKER);
         testUser.setWorkplace(testWorkplace);
+        testUser.setDeleted(false);
 
         // 관리자 설정
         testAdmin = new User();
@@ -75,6 +77,7 @@ class ScheduleServiceTest {
         testAdmin.setName("관리자");
         testAdmin.setRole(Role.ADMIN);
         testAdmin.setWorkplace(testWorkplace);
+        testAdmin.setDeleted(false);
 
         // 스케줄 설정
         testSchedule = new Schedule();
@@ -127,6 +130,7 @@ class ScheduleServiceTest {
         existingSchedule.setStartTime(LocalTime.of(10, 0));
         existingSchedule.setEndTime(LocalTime.of(15, 0));
 
+        given(userRepository.findById(testUser.getId())).willReturn(Optional.of(testUser));
         given(scheduleRepository.findByUserIdAndWorkDate(testUser.getId(), request.getWorkDate()))
                 .willReturn(List.of(existingSchedule));
 
@@ -408,5 +412,147 @@ class ScheduleServiceTest {
         // act & assert
         assertThrows(IllegalArgumentException.class,
             () -> scheduleService.updateScheduleAdmin(patchRequest, normalUser.getId()));
+    }
+
+    // ===== 삭제된 사용자/사업장 검증 테스트 =====
+
+    @Test
+    @DisplayName("saveSchedule - 삭제된 사용자")
+    void testSaveSchedule_DeletedUser() {
+        // arrange
+        User deletedUser = new User();
+        deletedUser.setId(5L);
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setDeleted(true);
+        deletedUser.setWorkplace(testWorkplace);
+
+        ScheduleRequest request = ScheduleRequest.builder()
+                .workDate(LocalDate.of(2024, 7, 1))
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(18, 0))
+                .build();
+
+        given(userRepository.findById(deletedUser.getId())).willReturn(Optional.of(deletedUser));
+
+        // act & assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> scheduleService.saveSchedule(List.of(request), deletedUser.getId()));
+
+        assertEquals("삭제된 사용자입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("saveSchedule - 삭제된 사업장")
+    void testSaveSchedule_DeletedWorkplace() {
+        // arrange
+        Workplace deletedWorkplace = new Workplace();
+        deletedWorkplace.setId(2L);
+        deletedWorkplace.setDeleted(true);
+
+        User userWithDeletedWorkplace = new User();
+        userWithDeletedWorkplace.setId(6L);
+        userWithDeletedWorkplace.setRole(Role.WORKER);
+        userWithDeletedWorkplace.setDeleted(false);
+        userWithDeletedWorkplace.setWorkplace(deletedWorkplace);
+
+        ScheduleRequest request = ScheduleRequest.builder()
+                .workDate(LocalDate.of(2024, 7, 1))
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(18, 0))
+                .build();
+
+        given(userRepository.findById(userWithDeletedWorkplace.getId())).willReturn(Optional.of(userWithDeletedWorkplace));
+
+        // act & assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> scheduleService.saveSchedule(List.of(request), userWithDeletedWorkplace.getId()));
+
+        assertEquals("삭제된 근무지입니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("saveScheduleAdmin - 삭제된 대상 사용자")
+    void testSaveScheduleAdmin_DeletedTargetUser() {
+        // arrange
+        User deletedTargetUser = new User();
+        deletedTargetUser.setId(7L);
+        deletedTargetUser.setRole(Role.WORKER);
+        deletedTargetUser.setDeleted(true);
+        deletedTargetUser.setWorkplace(testWorkplace);
+
+        ScheduleRequest request = ScheduleRequest.builder()
+                .workDate(LocalDate.of(2024, 7, 1))
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(18, 0))
+                .build();
+
+        given(userRepository.findById(deletedTargetUser.getId())).willReturn(Optional.of(deletedTargetUser));
+        given(userRepository.findById(testAdmin.getId())).willReturn(Optional.of(testAdmin));
+
+        // act & assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> scheduleService.saveScheduleAdmin(List.of(request), deletedTargetUser.getId(), testAdmin.getId()));
+
+        assertEquals("대상 사용자가 삭제되었습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("saveScheduleAdmin - 삭제된 관리자 사용자")
+    void testSaveScheduleAdmin_DeletedAdminUser() {
+        // arrange
+        User deletedAdmin = new User();
+        deletedAdmin.setId(8L);
+        deletedAdmin.setRole(Role.ADMIN);
+        deletedAdmin.setDeleted(true);
+        deletedAdmin.setWorkplace(testWorkplace);
+
+        ScheduleRequest request = ScheduleRequest.builder()
+                .workDate(LocalDate.of(2024, 7, 1))
+                .startTime(LocalTime.of(9, 0))
+                .endTime(LocalTime.of(18, 0))
+                .build();
+
+        given(userRepository.findById(testUser.getId())).willReturn(Optional.of(testUser));
+        given(userRepository.findById(deletedAdmin.getId())).willReturn(Optional.of(deletedAdmin));
+
+        // act & assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+            () -> scheduleService.saveScheduleAdmin(List.of(request), testUser.getId(), deletedAdmin.getId()));
+
+        assertEquals("관리자 사용자가 삭제되었습니다.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("getScheduleDay - 삭제된 사용자의 스케줄 조회")
+    void testGetScheduleDay_DeletedUser() {
+        // arrange
+        User deletedUser = new User();
+        deletedUser.setId(9L);
+        deletedUser.setName("삭제된 사용자");
+        deletedUser.setRole(Role.WORKER);
+        deletedUser.setDeleted(true);
+        deletedUser.setWorkplace(testWorkplace);
+
+        Schedule scheduleByDeletedUser = new Schedule();
+        scheduleByDeletedUser.setId(2L);
+        scheduleByDeletedUser.setUser(deletedUser);
+        scheduleByDeletedUser.setWorkplace(testWorkplace);
+        scheduleByDeletedUser.setWorkDate(LocalDate.of(2024, 7, 1));
+        scheduleByDeletedUser.setStartTime(LocalTime.of(9, 0));
+        scheduleByDeletedUser.setEndTime(LocalTime.of(18, 0));
+        scheduleByDeletedUser.setNote("테스트 근무");
+
+        given(userRepository.findById(deletedUser.getId())).willReturn(Optional.of(deletedUser));
+        given(scheduleRepository.findByUserAndWorkDate(deletedUser, LocalDate.of(2024, 7, 1)))
+                .willReturn(List.of(scheduleByDeletedUser));
+
+        // act
+        List<ScheduleResponse> result = scheduleService.getScheduleDay(deletedUser.getId(), LocalDate.of(2024, 7, 1));
+
+        // assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getUserName().contains("(탈퇴한 사용자)"));
+        assertTrue(result.get(0).getNote().contains("(사용자 탈퇴로 인해 스케줄 정보가 정확하지 않을 수 있습니다.)"));
     }
 }
