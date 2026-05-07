@@ -32,6 +32,7 @@ import java.util.List;
 @Table(name = "board")
 public class Board {
 
+    // 게시판 삭제 시 게시글도 함께 삭제됨 << refactor 작업 때 추가된 부분
     @OneToMany(mappedBy = "board", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 

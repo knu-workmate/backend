@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.workmate.workmate.user.entity.User;
 
 @Entity
@@ -22,6 +25,10 @@ public class Post {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
+
+    // 게시글 삭제 시 댓글들도 함께 삭제됨 << refactor 작업 때 추가된 부분
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     // 작성자
     @ManyToOne(fetch = FetchType.LAZY)
