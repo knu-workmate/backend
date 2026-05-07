@@ -52,20 +52,25 @@ public class PostService {
         // size가 0이거나 너무 크면 기본값 10으로 고정하는 방어 로직
         int finalSize = (size > 0 && size <= 50) ? size : 10;
 
-        // 페이징 설정 (페이지 번호, 한 페이지 당 개수, 정렬 방향)
+        // 페이징 설정
         Pageable pageable = PageRequest.of(page, finalSize);
 
         return postRepository.findByBoard_IdOrderByCreatedAtDesc(boardId, pageable)
-                .getContent() // Page 객체에서 실제 List만 추출
+                .getContent()
                 .stream()
-                .map(post -> new PostDto.PostListResponse(
-                        post.getId(),
-                        post.getTitle(),
-                        post.getUser().getName(),
-                        post.getBoard().getId(),
-                        post.getUser().getId(),
-                        post.getCreatedAt()
-                )).collect(Collectors.toList());
+                .map(post -> {
+                    // [추가된 로직] 유저 삭제 여부에 따른 이름 치환
+                    String authorName = post.getUser().getDeleted() ? "<삭제된 유저>" : post.getUser().getName();
+
+                    return new PostDto.PostListResponse(
+                            post.getId(),
+                            post.getTitle(),
+                            authorName, // 가공된 이름을 전달
+                            post.getBoard().getId(),
+                            post.getUser().getId(),
+                            post.getCreatedAt()
+                    );
+                }).collect(Collectors.toList());
     }
 
     // 게시글 상세 조회
@@ -75,9 +80,16 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
 
+        // [수정 포인트] 유저 삭제 여부에 따른 이름 치환
+        String authorName = post.getUser().getDeleted() ? "<삭제된 유저>" : post.getUser().getName();
+
         return new PostDto.PostDetailResponse(
-                post.getId(), post.getTitle(), post.getContent(),
-                post.getUser().getName(), post.getUser().getId(), post.getCreatedAt()
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                authorName, // 가공된 이름을 전달
+                post.getUser().getId(),
+                post.getCreatedAt()
         );
     }
 
