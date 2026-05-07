@@ -216,4 +216,58 @@ class AuthServiceTest {
 
         assertEquals("유효한 역할이 아닙니다. 0: WORKER, 1: OWNER", exception.getMessage());
     }
+
+    @Test
+    void withdraw_validUser_successfullyWithdraws() {
+        // arrange
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        user.setEmail("user@example.com");
+        user.setName("홍길동");
+        user.setRole(Role.WORKER);
+        user.setDeleted(false);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        given(userRepository.save(any(User.class))).willReturn(user);
+
+        // act
+        authService.withdraw(userId);
+
+        // assert
+        assertEquals(true, user.getDeleted());
+    }
+
+    @Test
+    void withdraw_userNotFound_throwsRuntimeException() {
+        // arrange
+        Long userId = 999L;
+        given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+        // act / assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.withdraw(userId));
+
+        assertEquals("사용자를 찾을 수 없습니다.", exception.getMessage());
+    }
+
+    @Test
+    void withdraw_alreadyWithdrawnUser_throwsRuntimeException() {
+        // arrange
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        user.setEmail("deleted@example.com");
+        user.setName("홍길동");
+        user.setRole(Role.WORKER);
+        user.setDeleted(true);
+
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+        // act / assert
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.withdraw(userId));
+
+        assertEquals("이미 탈퇴된 사용자입니다.", exception.getMessage());
+    }
 }

@@ -86,4 +86,21 @@ public class AuthService {
 
         return new SignupResponse("회원가입 성공", newUser.getEmail(), newUser.getName(), newUser.getRole());
     }
+
+    /**
+     * 사용자 탈퇴 메서드. 인증된 사용자가 자신의 계정을 삭제한다.
+     * @throws RuntimeException 인증된 사용자가 없거나, 이미 탈퇴된 경우 예외를 발생시킨다.
+     */
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        if (user.getDeleted()) {
+            throw new RuntimeException("이미 탈퇴된 사용자입니다.");
+        }
+
+        user.setDeleted(true);
+        userRepository.save(user);
+    }
+}
 }
