@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.workmate.workmate.user.entity.Role;
 import com.workmate.workmate.user.entity.User;
@@ -113,6 +114,7 @@ public class ScheduleService {
      * @param userId 스케줄을 삭제할 사용자 ID
      * @return 삭제된 스케줄 정보가 담긴 DTO 리스트
      */
+    @Transactional
     public List<ScheduleResponse> deleteSchedule(List<Long> scheduleIds, Long userId) {
         List<ScheduleResponse> deletedSchedules = new ArrayList<>();
         for (Long scheduleId : scheduleIds) {
@@ -121,19 +123,8 @@ public class ScheduleService {
                 throw new IllegalArgumentException("사용자에게 해당 스케줄이 존재하지 않습니다.");
             }
 
-            // 해당 유저만 삭제할 수 있도록 추가 검증
-            if(!schedule.getUser().getId().equals(userId)) {
-                throw new IllegalArgumentException("사용자에게 해당 스케줄이 존재하지 않습니다.");
-            }
-
-            // 삭제 전에 해당 스케줄을 참조하는 대타가 있다면 삭제
-            List<Substitute> substitutes = substituteRepository.findBySchedule_Id(schedule.getId());
-            for (Substitute substitute : substitutes) {
-                // 대타 삭제 전에 해당 대타를 참조하는 이력이 있다면 이력도 함께 삭제
-                List<SubstituteHistory> substituteHistories = substituteHistoryRepository.findBySubstitute(substitute);
-                substituteHistoryRepository.deleteAll(substituteHistories);
-                substituteRepository.delete(substitute);
-            }
+            // 삭제 전에 해당 스케줄을 참조하는 대타 및 이력 삭제
+            deleteRelatedSubstitutes(scheduleId);
 
             Workplace workplace = schedule.getUser().getWorkplace();
             ScheduleResponse response = new ScheduleResponse();
@@ -159,6 +150,7 @@ public class ScheduleService {
      * @param currentUserId 현재 로그인한 관리자 사용자 ID
      * @return 삭제된 스케줄 정보가 담긴 DTO 리스트
      */
+    @Transactional
     public List<ScheduleResponse> deleteScheduleAdmin(List<Long> scheduleIds, Long currentUserId) {
         // 현재 유저가 관리자인지 검증
         User adminUser = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("관리자 사용자를 찾을 수 없습니다."));
@@ -180,14 +172,8 @@ public class ScheduleService {
             Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
             Workplace workplace = schedule.getUser().getWorkplace();
 
-            // 삭제 전에 해당 스케줄을 참조하는 대타가 있다면 삭제
-            List<Substitute> substitutes = substituteRepository.findBySchedule_Id(schedule.getId());
-            for (Substitute substitute : substitutes) {
-                // 대타 삭제 전에 해당 대타를 참조하는 이력이 있다면 이력도 함께 삭제
-                List<SubstituteHistory> substituteHistories = substituteHistoryRepository.findBySubstitute(substitute);
-                substituteHistoryRepository.deleteAll(substituteHistories);
-                substituteRepository.delete(substitute);
-            }
+            // 삭제 전에 해당 스케줄을 참조하는 대타 및 이력 삭제
+            deleteRelatedSubstitutes(scheduleId);
 
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
@@ -204,6 +190,20 @@ public class ScheduleService {
             scheduleRepository.delete(schedule);
         }
         return deletedSchedules;
+    }
+
+    /**
+     * 스케줄과 관련된 대타 및 대타 이력을 삭제하는 메서드
+     * @param scheduleId 삭제할 스케줄 ID
+     */
+    private void deleteRelatedSubstitutes(Long scheduleId) {
+        List<Substitute> substitutes = substituteRepository.findBySchedule_Id(scheduleId);
+        for (Substitute substitute : substitutes) {
+            // 대타 삭제 전에 해당 대타를 참조하는 이력도 함께 삭제
+            List<SubstituteHistory> substituteHistories = substituteHistoryRepository.findBySubstitute(substitute);
+            substituteHistoryRepository.deleteAll(substituteHistories);
+            substituteRepository.delete(substitute);
+        }
     }
 
     /**
