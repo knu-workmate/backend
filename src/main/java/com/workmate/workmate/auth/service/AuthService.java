@@ -99,8 +99,8 @@ public class AuthService {
             throw new RuntimeException("이미 탈퇴된 사용자입니다.");
         }
 
+        user.setWorkplace(null); // 사용자와 사업장 연관 해제place(null); // 사용자와 사업장 연관 해제
         user.setDeleted(true);
         userRepository.save(user);
     }
 }
-
