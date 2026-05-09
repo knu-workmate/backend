@@ -21,12 +21,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "schedule")
 public class Schedule {
+
+
+    // [추가] 스케줄이 삭제되면 해당 스케줄로 생성된 대타 신청도 함께 삭제
+    @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Substitute> substitutes = new ArrayList<>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,6 +64,7 @@ public class Schedule {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
 
     @PrePersist
     public void prePersist() {

@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.workmate.workmate.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import com.workmate.workmate.communication.entity.BoardType;
 import com.workmate.workmate.user.entity.Workplace;
 import com.workmate.workmate.user.repository.WorkplaceRepository;
 
+
 @SpringBootTest(classes = WorkmateApplication.class)
 @Transactional
 @DisplayName("Board Repository 테스트")
@@ -28,6 +31,15 @@ public class BoardRepositoryTest {
 
     @Autowired
     private WorkplaceRepository workplaceRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private Workplace workplaceA;
     private Workplace workplaceB;
@@ -138,4 +150,5 @@ public class BoardRepositoryTest {
 
         assertEquals(2, boardRepository.count());
     }
+
 }

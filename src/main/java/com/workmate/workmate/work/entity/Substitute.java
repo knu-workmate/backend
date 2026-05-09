@@ -20,6 +20,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.OneToMany;
+
 @Entity
 @Getter
 @Setter
@@ -30,6 +35,9 @@ public class Substitute {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToMany(mappedBy = "substitute", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SubstituteHistory> histories = new ArrayList<>();
 
     // 어떤 스케줄의 대타인지
     @ManyToOne(fetch = FetchType.LAZY)
