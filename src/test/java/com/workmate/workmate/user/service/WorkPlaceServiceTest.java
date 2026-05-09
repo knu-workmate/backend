@@ -57,6 +57,7 @@ class WorkPlaceServiceTest {
         workplace.setInviteCode("SAMSUNG123");
 
         given(currentUser.getUserRole()).willReturn("ADMIN");
+        given(workplaceRepository.findByName("삼성전자")).willReturn(null);
         given(workplaceRepository.save(any(Workplace.class))).willReturn(workplace);
 
         // When
@@ -129,6 +130,8 @@ class WorkPlaceServiceTest {
         WorkPlaceRequest request2 = new WorkPlaceRequest("회사2");
 
         given(currentUser.getUserRole()).willReturn("ADMIN");
+        given(workplaceRepository.findByName("회사1")).willReturn(null);
+        given(workplaceRepository.findByName("회사2")).willReturn(null);
 
         Workplace workplace1 = new Workplace();
         workplace1.setId(1L);
@@ -161,6 +164,7 @@ class WorkPlaceServiceTest {
         WorkPlaceRequest request = new WorkPlaceRequest(workplaceName);
 
         given(currentUser.getUserRole()).willReturn("ADMIN");
+        given(workplaceRepository.findByName(workplaceName)).willReturn(null);
 
         Workplace expectedWorkplace = new Workplace();
         expectedWorkplace.setId(1L);
@@ -198,6 +202,7 @@ class WorkPlaceServiceTest {
         given(currentUser.getUserRole()).willReturn("ADMIN");
         given(currentUser.getUserId()).willReturn(userId);
         given(userRepository.findById(userId)).willReturn(Optional.of(adminUser));
+        given(workplaceRepository.findByName("수정된 회사명")).willReturn(null);
         given(workplaceRepository.save(any(Workplace.class))).willReturn(workplace);
         
         // When

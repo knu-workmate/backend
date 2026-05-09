@@ -189,7 +189,7 @@ public class ScheduleService {
         for (Long scheduleId : scheduleIds) {
             Schedule schedule = scheduleRepository.findById(scheduleId)
                     .orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
-            if (!schedule.getUser().getWorkplace().getId().equals(adminUser.getWorkplace().getId())) {
+            if (!schedule.getWorkplace().getId().equals(adminUser.getWorkplace().getId())) {
                 throw new IllegalArgumentException("해당 사업장의 스케줄이 아닌 스케줄이 포함되어 있습니다.");
             }
         }
@@ -199,7 +199,7 @@ public class ScheduleService {
         for (Long scheduleId : scheduleIds) {
             Schedule schedule = scheduleRepository.findById(scheduleId)
                     .orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
-            Workplace workplace = schedule.getUser().getWorkplace();
+            Workplace workplace = schedule.getWorkplace();
 
             // 삭제 전에 해당 스케줄을 참조하는 대타 및 이력 삭제
             deleteRelatedSubstitutes(scheduleId);
@@ -372,9 +372,6 @@ public class ScheduleService {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         List<Schedule> schedules = scheduleRepository.findByUserAndWorkDate(user, date);
         List<ScheduleResponse> response = new ArrayList<>();
-        if (schedules.isEmpty()) {
-            return null; // 해당 날짜에 스케줄이 없는 경우 null 반환
-        }
         for (Schedule schedule : schedules) {
             ScheduleResponse scheduleResponse = new ScheduleResponse();
             scheduleResponse.setId(schedule.getId());
@@ -394,6 +391,39 @@ public class ScheduleService {
             scheduleResponse.setEndTime(schedule.getEndTime());
             response.add(scheduleResponse);
         }
+
+        // 승인된 대타 일정이 있는지
+        List<Substitute> approvedSubstitutes = substituteRepository.findBySubstituteUser_IdAndStatus(userId,
+                SubstituteStatus.APPROVED);
+        for (Substitute substitute : approvedSubstitutes) {
+            Schedule schedule = substitute.getSchedule();
+            // 해당 스케줄 정보로 DTO 구성 후 리스트에 추가
+            if (schedule.getWorkDate().equals(date)) {
+                ScheduleResponse scheduleResponse = new ScheduleResponse();
+                scheduleResponse.setId(schedule.getId());
+                User scheduleUser = schedule.getUser();
+                scheduleResponse.setUserId(scheduleUser.getId());
+                if (scheduleUser.getDeleted()) {
+                    scheduleResponse.setUserName(scheduleUser.getName() + " (탈퇴한 사용자)");
+                    scheduleResponse.setNote(schedule.getNote() + " (사용자 탈퇴로 인해 스케줄 정보가 정확하지 않을 수 있습니다.)" + String.format("\n%s 근무자의 %s ~ %s 근무 대타", scheduleUser.getName(), schedule.getStartTime(),
+                            schedule.getEndTime()));
+                } else {
+                    scheduleResponse.setUserName(scheduleUser.getName());
+                    scheduleResponse.setNote(schedule.getNote() + String.format("\n%s 근무자의 %s ~ %s 근무 대타", scheduleUser.getName(), schedule.getStartTime(),
+                            schedule.getEndTime()));
+                }
+                scheduleResponse.setWorkplaceId(scheduleUser.getWorkplace().getId());
+                scheduleResponse.setWorkplaceName(scheduleUser.getWorkplace().getName());
+                scheduleResponse.setWorkDate(schedule.getWorkDate());
+                scheduleResponse.setStartTime(schedule.getStartTime());
+                scheduleResponse.setEndTime(schedule.getEndTime());
+                response.add(scheduleResponse);
+            }
+        }
+
+        // 근무 시작 시간 기준으로 정렬
+        response.sort((s1, s2) -> s1.getStartTime().compareTo(s2.getStartTime()));
+
         return response;
     }
 
