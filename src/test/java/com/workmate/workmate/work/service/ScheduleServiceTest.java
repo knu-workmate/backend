@@ -195,7 +195,6 @@ class ScheduleServiceTest {
         // arrange
         List<Long> scheduleIds = List.of(testSchedule.getId());
         given(scheduleRepository.findById(testSchedule.getId())).willReturn(Optional.of(testSchedule));
-        given(substituteRepository.findBySchedule_Id(testSchedule.getId())).willReturn(new ArrayList<>());
 
         // act
         List<ScheduleResponse> result = scheduleService.deleteSchedule(scheduleIds, testUser.getId());
@@ -231,19 +230,12 @@ class ScheduleServiceTest {
     }
 
     @Test
-    @DisplayName("deleteSchedule - 관련 대타 삭제")
+    @DisplayName("deleteSchedule - 스케줄 삭제 (대타는 엔티티 수준에서 자동 삭제)")
     void testDeleteSchedule_WithSubstitutes() {
         // arrange
         List<Long> scheduleIds = List.of(testSchedule.getId());
 
-        Substitute substitute = new Substitute();
-        substitute.setId(1L);
-        substitute.setSchedule(testSchedule);
-        substitute.setStatus(SubstituteStatus.PENDING_APPROVAL);
-
         given(scheduleRepository.findById(testSchedule.getId())).willReturn(Optional.of(testSchedule));
-        given(substituteRepository.findBySchedule_Id(testSchedule.getId())).willReturn(List.of(substitute));
-        given(substituteHistoryRepository.findBySubstitute(substitute)).willReturn(new ArrayList<>());
 
         // act
         List<ScheduleResponse> result = scheduleService.deleteSchedule(scheduleIds, testUser.getId());
@@ -251,7 +243,6 @@ class ScheduleServiceTest {
         // assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(substituteRepository, times(1)).delete(substitute);
         verify(scheduleRepository, times(1)).delete(testSchedule);
     }
 
@@ -263,7 +254,6 @@ class ScheduleServiceTest {
         List<Long> scheduleIds = List.of(testSchedule.getId());
         given(userRepository.findById(testAdmin.getId())).willReturn(Optional.of(testAdmin));
         given(scheduleRepository.findById(testSchedule.getId())).willReturn(Optional.of(testSchedule));
-        given(substituteRepository.findBySchedule_Id(testSchedule.getId())).willReturn(new ArrayList<>());
 
         // act
         List<ScheduleResponse> result = scheduleService.deleteScheduleAdmin(scheduleIds, testAdmin.getId());

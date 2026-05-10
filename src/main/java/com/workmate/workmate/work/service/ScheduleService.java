@@ -149,7 +149,9 @@ public class ScheduleService {
             }
 
             // 삭제 전에 해당 스케줄을 참조하는 대타 및 이력 삭제
-            deleteRelatedSubstitutes(scheduleId);
+            // 수정 : cascade 관련 설정이 엔티티 수준에서 완료됨.
+            // 따라서 해당 로직은 삭제함.
+            // deleteRelatedSubstitutes(scheduleId);
 
             Workplace workplace = schedule.getUser().getWorkplace();
             ScheduleResponse response = new ScheduleResponse();
@@ -202,7 +204,9 @@ public class ScheduleService {
             Workplace workplace = schedule.getWorkplace();
 
             // 삭제 전에 해당 스케줄을 참조하는 대타 및 이력 삭제
-            deleteRelatedSubstitutes(scheduleId);
+            // 수정 : cascade 관련 설정이 엔티티 수준에서 완료됨.
+            // 따라서 해당 로직은 삭제함.
+            // deleteRelatedSubstitutes(scheduleId);
 
             ScheduleResponse response = new ScheduleResponse();
             response.setId(schedule.getId());
@@ -223,6 +227,7 @@ public class ScheduleService {
 
     /**
      * 스케줄과 관련된 대타 및 대타 이력을 삭제하는 메서드
+     * 엔티티 수준에서 해당 로직이 구현되어 더 이상 사용하지 않음.
      * 
      * @param scheduleId 삭제할 스케줄 ID
      */
