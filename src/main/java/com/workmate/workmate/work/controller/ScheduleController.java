@@ -134,7 +134,7 @@ public class ScheduleController {
 
     // 기간으로 스케줄 조회 (파라미터로 받음)
     @GetMapping("/period")
-    @Operation(summary = "기간으로 내 스케줄 조회 (유저)", description = "특정 기간 동안의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다.")
+    @Operation(summary = "기간으로 내 스케줄 조회 (유저)", description = "특정 기간 동안의 스케줄을 조회합니다. 대타로 인해 변경된 일정을 포함하여 조회합니다. 대타로 변경된 schedule의 id는 기존에 근무하는 근무자의 scheduleId입니다.")
     @ApiResponse(responseCode = "200", description = "스케줄 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleGetResponse.class)))
     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "인증 실패", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))

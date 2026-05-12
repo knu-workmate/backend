@@ -522,6 +522,7 @@ public class ScheduleService {
                 }
 
                 ScheduleDate scheduleDate = new ScheduleDate();
+                scheduleDate.setId(schedule.getId());
                 scheduleDate.setWorkDate(schedule.getWorkDate());
                 scheduleDate.setStartTime(schedule.getStartTime());
                 scheduleDate.setEndTime(schedule.getEndTime());
@@ -539,6 +540,7 @@ public class ScheduleService {
                 continue;
             }
             ScheduleDate scheduleDate = new ScheduleDate();
+            scheduleDate.setId(schedule.getId());
             scheduleDate.setWorkDate(schedule.getWorkDate());
             scheduleDate.setStartTime(schedule.getStartTime());
             scheduleDate.setEndTime(schedule.getEndTime());
