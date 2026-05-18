@@ -56,4 +56,8 @@ public class User {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    @Column(name = "expo_push_token")
+    @Setter // 👈 요 녀석을 변수 바로 위에 추가해 줍니다!
+    private String expoPushToken;
 }
