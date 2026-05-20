@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.List;
 
 public interface WorkplaceRepository extends JpaRepository<Workplace, Long> {
-    Optional<Workplace> findByName(String name);
+    Optional<Workplace> findByNameAndDeletedFalse(String name);
     Optional<Workplace> findByInviteCode(String inviteCode);
     List<Workplace> findByNameContaining(String name);
 }
