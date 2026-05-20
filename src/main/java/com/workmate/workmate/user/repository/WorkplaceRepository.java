@@ -7,6 +7,10 @@ import java.util.List;
 
 public interface WorkplaceRepository extends JpaRepository<Workplace, Long> {
     List<Workplace> findByName(String name);
+
+    boolean existsByName(String name);
+
+
     Optional<Workplace> findByInviteCode(String inviteCode);
     List<Workplace> findByNameContaining(String name);
 }

@@ -39,8 +39,8 @@ public class WorkPlaceService {
             throw new UnauthorizedException("관리자 권한이 필요합니다.");
         }
 
-        // 같은 이름의 이미 생성된 사업장이 있는 지 검증
-        if (workplaceRepository.findByName(request.getName()) != null) {
+        // 같은 이름의 이미 생성된 사업장이 있는 지 검증 + 수정: existsByName 메서드로 수정
+        if (workplaceRepository.existsByName(request.getName())) {
             throw new RuntimeException("이미 존재하는 사업장 이름입니다.");
         }
 
@@ -65,7 +65,7 @@ public class WorkPlaceService {
                 .orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
         Workplace workplace = user.getWorkplace();
 
-        if (workplaceRepository.findByName(request.getName()) != null) {
+        if (workplaceRepository.existsByName(request.getName())) {
             throw new RuntimeException("이미 존재하는 사업장 이름입니다.");
         }
 
